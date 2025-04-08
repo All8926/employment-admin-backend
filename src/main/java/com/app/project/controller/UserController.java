@@ -1,6 +1,5 @@
 package com.app.project.controller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.app.project.annotation.AuthCheck;
 import com.app.project.common.BaseResponse;
 import com.app.project.common.DeleteRequest;
@@ -10,24 +9,12 @@ import com.app.project.config.WxOpenConfig;
 import com.app.project.constant.UserConstant;
 import com.app.project.exception.BusinessException;
 import com.app.project.exception.ThrowUtils;
-import com.app.project.model.dto.user.UserAddRequest;
-import com.app.project.model.dto.user.UserLoginRequest;
-import com.app.project.model.dto.user.UserQueryRequest;
-import com.app.project.model.dto.user.UserRegisterRequest;
-import com.app.project.model.dto.user.UserUpdateMyRequest;
-import com.app.project.model.dto.user.UserUpdateRequest;
+import com.app.project.model.dto.user.*;
 import com.app.project.model.entity.User;
 import com.app.project.model.vo.LoginUserVO;
 import com.app.project.model.vo.UserVO;
 import com.app.project.service.UserService;
-
-import java.util.List;
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
-
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
 import me.chanjar.weixin.common.bean.oauth2.WxOAuth2AccessToken;
@@ -36,12 +23,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.DigestUtils;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
+import java.util.List;
 
 import static com.app.project.service.impl.UserServiceImpl.SALT;
 
@@ -103,7 +91,8 @@ public class UserController {
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        LoginUserVO loginUserVO = userService.userLogin(userAccount, userPassword, request);
+          String userRole = userLoginRequest.getUserRole();
+        LoginUserVO loginUserVO = userService.userLogin(userAccount, userPassword,userRole, request);
         return ResultUtils.success(loginUserVO);
     }
 

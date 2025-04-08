@@ -38,8 +38,12 @@ public class StudentEditRequest implements Serializable {
     /**
      * 学号
      */
-    private String student_number;
+    private String studentNumber;
 
+    /**
+     * 部门id
+     */
+    private Long deptId;
 
     /**
      * 手机号

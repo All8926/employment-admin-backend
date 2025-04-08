@@ -1,13 +1,10 @@
 package com.app.project.model.dto.student;
 
 import com.app.project.common.PageRequest;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * 查询学生信息请求
@@ -34,6 +31,11 @@ public class StudentQueryRequest extends PageRequest implements Serializable {
      */
     private String userName;
 
+    /**
+     * 部门id
+     */
+    private Long deptId;
+
 
     /**
      * 性别 0-男 1-女 2-未知
@@ -43,7 +45,7 @@ public class StudentQueryRequest extends PageRequest implements Serializable {
     /**
      * 学号
      */
-    private String student_number;
+    private String studentNumber;
 
     /**
      * 手机号

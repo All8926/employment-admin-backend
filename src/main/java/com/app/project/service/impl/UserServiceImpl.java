@@ -1,31 +1,36 @@
 package com.app.project.service.impl;
 
-import static com.app.project.constant.UserConstant.USER_LOGIN_STATE;
-
 import cn.hutool.core.collection.CollUtil;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.app.project.common.ErrorCode;
 import com.app.project.constant.CommonConstant;
 import com.app.project.exception.BusinessException;
+import com.app.project.exception.ThrowUtils;
 import com.app.project.mapper.UserMapper;
 import com.app.project.model.dto.user.UserQueryRequest;
+import com.app.project.model.entity.Student;
 import com.app.project.model.entity.User;
 import com.app.project.model.enums.UserRoleEnum;
 import com.app.project.model.vo.LoginUserVO;
 import com.app.project.model.vo.UserVO;
+import com.app.project.service.StudentService;
 import com.app.project.service.UserService;
 import com.app.project.utils.SqlUtils;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-import javax.servlet.http.HttpServletRequest;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static com.app.project.constant.UserConstant.USER_LOGIN_STATE;
 
 /**
  * 用户服务实现
@@ -41,6 +46,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * 盐值，混淆密码
      */
     public static final String SALT = "xxx";
+
+    @Resource
+    private StudentService studentService;
 
     @Override
     public long userRegister(String userAccount, String userPassword, String checkPassword) {
@@ -81,7 +89,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public LoginUserVO userLogin(String userAccount, String userPassword, HttpServletRequest request) {
+    public LoginUserVO userLogin(String userAccount, String userPassword, String userRole, HttpServletRequest request) {
         // 1. 校验
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
@@ -92,12 +100,34 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (userPassword.length() < 8) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码错误");
         }
+        // 2.非管理员校验
+        if(!UserRoleEnum.ADMIN.getValue().equals(userRole)){
+            // 校验角色是否存在
+            if (!UserRoleEnum.getValues().contains(userRole)) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "角色不存在");
+            }
+        }
+
         // 2. 加密
         String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
-        // 查询用户是否存在
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+
+        QueryWrapper queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("userAccount", userAccount);
         queryWrapper.eq("userPassword", encryptPassword);
+
+
+
+        // 3.校验学生
+        if(UserRoleEnum.STUDENT.getValue().equals(userRole)){
+           Student student = studentService.getOne(queryWrapper);
+           ThrowUtils.throwIf(student == null, ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
+        }
+
+        // 校验管理员
+        if(UserRoleEnum.ADMIN.getValue().equals(userRole)){
+
+        }
+
         User user = this.baseMapper.selectOne(queryWrapper);
         // 用户不存在
         if (user == null) {

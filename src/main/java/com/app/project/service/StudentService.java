@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
 * @author Administrator
@@ -61,4 +62,11 @@ public interface StudentService extends IService<Student> {
      * @return
      */
     boolean register(StudentAddRequest studentAddRequest);
+
+    /**
+     * 根据部门id查询学生
+     * @param departmentId
+     * @return
+     */
+    List<StudentVO> listStudentsByDepartment(Long departmentId);
 }

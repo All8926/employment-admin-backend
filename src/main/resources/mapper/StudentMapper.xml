@@ -11,7 +11,8 @@
             <result property="userName" column="userName" jdbcType="VARCHAR"/>
             <result property="userAvatar" column="userAvatar" jdbcType="VARCHAR"/>
             <result property="gender" column="gender" jdbcType="TINYINT"/>
-            <result property="student_number" column="student_number" jdbcType="VARCHAR"/>
+            <result property="studentNumber" column="studentNumber" jdbcType="VARCHAR"/>
+            <result property="deptId" column="deptId" jdbcType="BIGINT"/>
             <result property="phone" column="phone" jdbcType="VARCHAR"/>
             <result property="email" column="email" jdbcType="VARCHAR"/>
             <result property="status" column="status" jdbcType="TINYINT"/>
@@ -23,9 +24,9 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,userAccount,userPassword,
+        id,userAccount,userPassword,deptId,
         userName,userAvatar,gender,
-        student_number,phone,email,
+        studentNumber,phone,email,
         status,userProfile,userRole,
         createTime,updateTime,isDelete
     </sql>

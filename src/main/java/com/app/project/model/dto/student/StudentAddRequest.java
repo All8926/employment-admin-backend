@@ -53,13 +53,13 @@ public class StudentAddRequest implements Serializable {
      */
     @NotBlank(message = "学号不能为空")
     @Size(max = 20, min = 6, message = "学号长度限制6-20位")
-    private String student_number;
+    private String studentNumber;
 
     /**
-     * 学院id
+     * 部门id
      */
     @NotNull(message = "学院不能为空")
-    private Long departmentId;
+    private Long deptId;
 
     /**
      * 手机号

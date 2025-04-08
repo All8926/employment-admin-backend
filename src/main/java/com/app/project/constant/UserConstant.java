@@ -30,5 +30,20 @@ public interface UserConstant {
      */
     String BAN_ROLE = "ban";
 
+    /**
+     * 学生角色
+     */
+    String STUDENT_ROLE = "student";
+
+    /**
+     * 教师角色
+     */
+    String TEACHER_ROLE = "teacher";
+
+    /**
+     * 企业角色
+     */
+    String ENTERPRISE_ROLE = "enterprise";
+
     // endregion
 }

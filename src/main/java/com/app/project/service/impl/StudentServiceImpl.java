@@ -3,33 +3,30 @@ package com.app.project.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import com.alibaba.excel.util.StringUtils;
 import com.app.project.common.ErrorCode;
-import com.app.project.common.ResultUtils;
 import com.app.project.constant.CommonConstant;
 import com.app.project.exception.BusinessException;
-import com.app.project.exception.ThrowUtils;
 import com.app.project.mapper.StudentMapper;
 import com.app.project.model.dto.student.StudentAddRequest;
 import com.app.project.model.dto.student.StudentQueryRequest;
+import com.app.project.model.entity.Department;
 import com.app.project.model.entity.Student;
-import com.app.project.model.entity.User;
 import com.app.project.model.enums.RegisterStatusEnum;
 import com.app.project.model.vo.StudentVO;
-import com.app.project.model.vo.UserVO;
+import com.app.project.service.DepartmentService;
 import com.app.project.service.StudentService;
-
 import com.app.project.service.UserService;
 import com.app.project.utils.SqlUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import org.springframework.beans.BeanUtils;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,6 +48,9 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student>
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private DepartmentService departmentService;
 
     /**
      * 校验数据
@@ -78,7 +78,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student>
         // todo 从对象中取值
         Long id = studentQueryRequest.getId();
         String userName = studentQueryRequest.getUserName();
-        String student_number = studentQueryRequest.getStudent_number();
+        String studentNumber = studentQueryRequest.getStudentNumber();
         String email = studentQueryRequest.getEmail();
         String phone = studentQueryRequest.getPhone();
         Integer gender = studentQueryRequest.getGender();
@@ -86,16 +86,18 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student>
         String userAccount = studentQueryRequest.getUserAccount();
         String sortOrder = studentQueryRequest.getSortOrder();
         String sortField = studentQueryRequest.getSortField();
+        Long deptId = studentQueryRequest.getDeptId();
 
         // 模糊查询
         queryWrapper.like(StringUtils.isNotBlank(userName), "userName", userName);
-        queryWrapper.like(StringUtils.isNotBlank(student_number), "student_number", student_number);
+        queryWrapper.like(StringUtils.isNotBlank(studentNumber), "studentNumber", studentNumber);
         queryWrapper.like(StringUtils.isNotBlank(email), "email", email);
         queryWrapper.like(StringUtils.isNotBlank(phone), "phone", phone);
         queryWrapper.like(StringUtils.isNotBlank(userAccount), "userAccount", userAccount);
 
         // 精确查询
         queryWrapper.eq(ObjectUtils.isNotEmpty(id), "id", id);
+        queryWrapper.eq(ObjectUtils.isNotEmpty(deptId), "deptId", deptId);
         queryWrapper.eq(ObjectUtils.isNotEmpty(gender), "gender", gender);
         queryWrapper.eq(ObjectUtils.isNotEmpty(status), "status", status);
 
@@ -104,6 +106,44 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student>
                 sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
                 sortField);
         return queryWrapper;
+    }
+
+    @Override
+    public List<StudentVO> listStudentsByDepartment(Long departmentId) {
+        // 1. 查询所有部门
+        List<Department> allDepartments = departmentService.list();
+
+        // 2. 递归获取所有下级部门 ID
+        Set<Long> deptIds = new HashSet<>();
+        collectSubDepartmentIds(departmentId, allDepartments, deptIds);
+
+        // 包含当前部门本身
+        deptIds.add(departmentId);
+
+        // 3. 查询学生表
+        QueryWrapper<Student> queryWrapper = new QueryWrapper<Student>();
+        queryWrapper.in("depId", deptIds);
+          List<Student> studentList = this.list(queryWrapper);
+          return studentList.stream().map(student -> {
+              StudentVO studentVO = new StudentVO();
+              BeanUtils.copyProperties(student, studentVO);
+              return studentVO;
+          }).collect(Collectors.toList());
+    }
+
+    /**
+     * 递归获取所有下级部门 ID
+     * @param parentId
+     * @param allDepartments
+     * @param result
+     */
+    private void collectSubDepartmentIds(Long parentId, List<Department> allDepartments, Set<Long> result) {
+        for (Department dept : allDepartments) {
+            if (parentId.equals(dept.getParentId())) {
+                result.add(dept.getId());
+                collectSubDepartmentIds(dept.getId(), allDepartments, result); // 递归找下级
+            }
+        }
     }
 
     /**
@@ -118,10 +158,15 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student>
         // 对象转封装类
         StudentVO studentVO = new StudentVO();
         BeanUtils.copyProperties(student, studentVO);
-        // todo 可以根据需要为封装对象补充值，不需要的内容可以删除
 
-        // 1. 关联查询学院信息
-
+        // 1. 关联查询部门信息
+        long deptId = student.getDeptId();
+        if(deptId > 0){
+            Department dept = departmentService.getById(deptId);
+            if(dept !=null){
+                studentVO.setDeptName(dept.getName());
+            }
+        }
 
         // endregion
 
@@ -149,25 +194,17 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student>
             return studentVO;
         }).collect(Collectors.toList());
 
-        // todo 可以根据需要为封装对象补充值，不需要的内容可以删除
-        // region 可选
-        // 1. 关联查询用户信息
-//        Set<Long> userIdSet = studentList.stream().map(Student::getUserId).collect(Collectors.toSet());
-//        Map<Long, List<User>> userIdUserListMap = userService.listByIds(userIdSet).stream()
-//                .collect(Collectors.groupingBy(User::getId));
-//
-//        // 填充信息
-//        studentVOList.forEach(studentVO -> {
-//            Long userId = studentVO.getUserId();
-//            User user = null;
-//            if (userIdUserListMap.containsKey(userId)) {
-//                user = userIdUserListMap.get(userId).get(0);
-//            }
-//            studentVO.setUser(userService.getUserVO(user));
-//            studentVO.setHasThumb(studentIdHasThumbMap.getOrDefault(studentVO.getId(), false));
-//            studentVO.setHasFavour(studentIdHasFavourMap.getOrDefault(studentVO.getId(), false));
-//        });
-        // endregion
+        // 1.取出所有部门id
+        final Set<Long> deptIds = studentList.stream().map(Student::getDeptId).collect(Collectors.toSet());
+        // 2.批量查询部门信息 返回 deptId -> Department
+        Map<Long, List<Department>> deptIdDepartmentListMap = departmentService.listByIds(deptIds).stream().collect(Collectors.groupingBy(Department::getId));
+        // 3.填充部门信息
+        studentVOList.forEach(studentVO -> {
+            List<Department> departments = deptIdDepartmentListMap.get(studentVO.getDeptId());
+            if (CollUtil.isNotEmpty(departments) && departments.size() != 0) {
+                studentVO.setDeptName(departments.get(0).getName());
+            }
+        });
 
         studentVOPage.setRecords(studentVOList);
         return studentVOPage;

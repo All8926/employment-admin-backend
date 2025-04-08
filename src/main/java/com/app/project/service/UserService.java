@@ -1,14 +1,15 @@
 package com.app.project.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.app.project.model.dto.user.UserQueryRequest;
 import com.app.project.model.entity.User;
 import com.app.project.model.vo.LoginUserVO;
 import com.app.project.model.vo.UserVO;
-import java.util.List;
-import javax.servlet.http.HttpServletRequest;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.IService;
 import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * 用户服务
@@ -33,10 +34,11 @@ public interface UserService extends IService<User> {
      *
      * @param userAccount  用户账户
      * @param userPassword 用户密码
+     * @param userRole 用户角色
      * @param request
      * @return 脱敏后的用户信息
      */
-    LoginUserVO userLogin(String userAccount, String userPassword, HttpServletRequest request);
+    LoginUserVO userLogin(String userAccount, String userPassword, String userRole, HttpServletRequest request);
 
     /**
      * 用户登录（微信开放平台）

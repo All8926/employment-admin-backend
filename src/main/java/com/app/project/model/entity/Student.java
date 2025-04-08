@@ -47,7 +47,7 @@ public class Student implements Serializable {
     /**
      * 学号
      */
-    private String student_number;
+    private String studentNumber;
 
     /**
      * 手机号
@@ -58,6 +58,11 @@ public class Student implements Serializable {
      * 邮箱
      */
     private String email;
+
+    /**
+     * 部门id
+     */
+    private Long deptId;
 
     /**
      * 状态 0-待审核 1-已通过 2-已拒绝

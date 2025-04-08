@@ -126,6 +126,7 @@ public class StudentController {
      * @param id
      * @return
      */
+    @ApiOperation(value = "根据 id 获取学生信息（封装类）")
     @GetMapping("/get/vo")
     public BaseResponse<StudentVO> getStudentVOById(long id, HttpServletRequest request) {
         ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
@@ -160,6 +161,7 @@ public class StudentController {
      * @param request
      * @return
      */
+    @ApiOperation(value = "分页获取学生信息列表（封装类）")
     @PostMapping("/list/page/vo")
     public BaseResponse<Page<StudentVO>> listStudentVOByPage(@RequestBody StudentQueryRequest studentQueryRequest,
                                                                HttpServletRequest request) {
@@ -174,30 +176,6 @@ public class StudentController {
         return ResultUtils.success(studentService.getStudentVOPage(studentPage, request));
     }
 
-    /**
-     * 分页获取当前登录用户创建的学生信息列表
-     *
-     * @param studentQueryRequest
-     * @param request
-     * @return
-     */
-    @PostMapping("/my/list/page/vo")
-    public BaseResponse<Page<StudentVO>> listMyStudentVOByPage(@RequestBody StudentQueryRequest studentQueryRequest,
-                                                                 HttpServletRequest request) {
-        ThrowUtils.throwIf(studentQueryRequest == null, ErrorCode.PARAMS_ERROR);
-        // 补充查询条件，只查询当前登录用户的数据
-        User loginUser = userService.getLoginUser(request);
-//        studentQueryRequest.setUserId(loginUser.getId());
-        long current = studentQueryRequest.getCurrent();
-        long size = studentQueryRequest.getPageSize();
-        // 限制爬虫
-        ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
-        // 查询数据库
-        Page<Student> studentPage = studentService.page(new Page<>(current, size),
-                studentService.getQueryWrapper(studentQueryRequest));
-        // 获取封装类
-        return ResultUtils.success(studentService.getStudentVOPage(studentPage, request));
-    }
 
     /**
      * 编辑学生信息（给用户使用）

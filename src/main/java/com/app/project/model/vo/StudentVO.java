@@ -1,12 +1,8 @@
 package com.app.project.model.vo;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.Date;
-import java.util.List;
 
 /**
  * 学生信息视图
@@ -46,7 +42,7 @@ public class StudentVO implements Serializable {
     /**
      * 学号
      */
-    private String student_number;
+    private String studentNumber;
 
     /**
      * 手机号
@@ -57,6 +53,17 @@ public class StudentVO implements Serializable {
      * 邮箱
      */
     private String email;
+
+
+    /**
+     * 部门id
+     */
+    private Long deptId;
+
+    /**
+     * 部门名字
+     */
+    private String deptName;
 
     /**
      * 状态 0-待审核 1-已通过 2-已拒绝
