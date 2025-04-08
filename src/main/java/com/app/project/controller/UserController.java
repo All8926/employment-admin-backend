@@ -92,7 +92,7 @@ public class UserController {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
           String userRole = userLoginRequest.getUserRole();
-        LoginUserVO loginUserVO = userService.userLogin(userAccount, userPassword,userRole, request);
+        LoginUserVO loginUserVO = userService.userLogin(userLoginRequest, request);
         return ResultUtils.success(loginUserVO);
     }
 

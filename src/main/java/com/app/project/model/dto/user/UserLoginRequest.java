@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiParam;
 import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
 /**
@@ -23,6 +24,7 @@ public class UserLoginRequest implements Serializable {
     @NotBlank(message = "密码不能为空")
     private String userPassword;
 
-    @ApiParam(value = "student-学生 teacher-老师 enterprise-企业 管理员可不填")
+    @ApiParam(value = "student-学生 teacher-老师 enterprise-企业")
+    @NotBlank(message = "用户角色不能为空")
     private String userRole;
 }

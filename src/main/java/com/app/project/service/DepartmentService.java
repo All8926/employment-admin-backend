@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.util.List;
 
+
 /**
 * @author Administrator
 * @description 针对表【department(部门表)】的数据库操作Service

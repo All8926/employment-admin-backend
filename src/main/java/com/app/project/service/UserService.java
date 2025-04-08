@@ -1,5 +1,6 @@
 package com.app.project.service;
 
+import com.app.project.model.dto.user.UserLoginRequest;
 import com.app.project.model.dto.user.UserQueryRequest;
 import com.app.project.model.entity.User;
 import com.app.project.model.vo.LoginUserVO;
@@ -38,7 +39,7 @@ public interface UserService extends IService<User> {
      * @param request
      * @return 脱敏后的用户信息
      */
-    LoginUserVO userLogin(String userAccount, String userPassword, String userRole, HttpServletRequest request);
+    LoginUserVO userLogin(UserLoginRequest userLoginRequest, HttpServletRequest request);
 
     /**
      * 用户登录（微信开放平台）

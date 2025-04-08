@@ -6,13 +6,16 @@ import com.app.project.constant.CommonConstant;
 import com.app.project.exception.BusinessException;
 import com.app.project.exception.ThrowUtils;
 import com.app.project.mapper.UserMapper;
+import com.app.project.model.dto.user.UserLoginRequest;
 import com.app.project.model.dto.user.UserQueryRequest;
 import com.app.project.model.entity.Student;
+import com.app.project.model.entity.Teacher;
 import com.app.project.model.entity.User;
 import com.app.project.model.enums.UserRoleEnum;
 import com.app.project.model.vo.LoginUserVO;
 import com.app.project.model.vo.UserVO;
 import com.app.project.service.StudentService;
+import com.app.project.service.TeacherService;
 import com.app.project.service.UserService;
 import com.app.project.utils.SqlUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -35,8 +38,8 @@ import static com.app.project.constant.UserConstant.USER_LOGIN_STATE;
 /**
  * 用户服务实现
  *
- * @author 
- * @from 
+ * @author
+ * @from
  */
 @Service
 @Slf4j
@@ -49,6 +52,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Resource
     private StudentService studentService;
+
+    @Resource
+    private TeacherService teacherService;
 
     @Override
     public long userRegister(String userAccount, String userPassword, String checkPassword) {
@@ -89,54 +95,45 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public LoginUserVO userLogin(String userAccount, String userPassword, String userRole, HttpServletRequest request) {
-        // 1. 校验
-        if (StringUtils.isAnyBlank(userAccount, userPassword)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
-        }
-        if (userAccount.length() < 4) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号错误");
-        }
-        if (userPassword.length() < 8) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码错误");
-        }
-        // 2.非管理员校验
-        if(!UserRoleEnum.ADMIN.getValue().equals(userRole)){
-            // 校验角色是否存在
-            if (!UserRoleEnum.getValues().contains(userRole)) {
-                throw new BusinessException(ErrorCode.PARAMS_ERROR, "角色不存在");
-            }
+    public LoginUserVO userLogin(UserLoginRequest userLoginRequest, HttpServletRequest request) {
+        String userAccount = userLoginRequest.getUserAccount();
+        String userPassword = userLoginRequest.getUserPassword();
+        String userRole = userLoginRequest.getUserRole();
+        ThrowUtils.throwIf(StringUtils.isAnyBlank(userAccount, userPassword, userRole), ErrorCode.PARAMS_ERROR);
+
+        // 校验角色是否存在
+        if (!UserRoleEnum.getValues().contains(userRole)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "角色不存在");
         }
 
-        // 2. 加密
+        // 2. 密码加密
         String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
-
-        QueryWrapper queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("userAccount", userAccount);
-        queryWrapper.eq("userPassword", encryptPassword);
-
-
-
+        LoginUserVO loginUserVO = new LoginUserVO();
         // 3.校验学生
-        if(UserRoleEnum.STUDENT.getValue().equals(userRole)){
-           Student student = studentService.getOne(queryWrapper);
-           ThrowUtils.throwIf(student == null, ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
+        if (UserRoleEnum.STUDENT.getValue().equals(userRole)) {
+            QueryWrapper<Student> studentQueryWrapper = new QueryWrapper<>();
+            studentQueryWrapper.eq("userAccount", userAccount);
+            studentQueryWrapper.eq("userPassword", encryptPassword);
+            Student student = studentService.getOne(studentQueryWrapper);
+            ThrowUtils.throwIf(student == null, ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
+            BeanUtils.copyProperties(student, loginUserVO);
+            request.getSession().setAttribute(USER_LOGIN_STATE, student);
         }
 
-        // 校验管理员
-        if(UserRoleEnum.ADMIN.getValue().equals(userRole)){
-
+        // 4.校验教师/管理员
+        if (UserRoleEnum.TEACHER.getValue().equals(userRole) || UserRoleEnum.ADMIN.getValue().equals(userRole)) {
+            QueryWrapper<Teacher> teacherQueryWrapper = new QueryWrapper<>();
+            teacherQueryWrapper.eq("userAccount", userAccount);
+            teacherQueryWrapper.eq("userPassword", encryptPassword);
+            Teacher teacher = teacherService.getOne(teacherQueryWrapper);
+            ThrowUtils.throwIf(teacher == null, ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
+            BeanUtils.copyProperties(teacher, loginUserVO);
+            request.getSession().setAttribute(USER_LOGIN_STATE, teacher);
         }
-
-        User user = this.baseMapper.selectOne(queryWrapper);
-        // 用户不存在
-        if (user == null) {
-            log.info("user login failed, userAccount cannot match userPassword");
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
+        if(loginUserVO.getId() == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "登录失败，请联系管理员");
         }
-        // 3. 记录用户的登录态
-        request.getSession().setAttribute(USER_LOGIN_STATE, user);
-        return this.getLoginUserVO(user);
+        return loginUserVO;
     }
 
     @Override
