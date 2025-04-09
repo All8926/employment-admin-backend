@@ -10,6 +10,7 @@ import com.app.project.manager.CosManager;
 import com.app.project.model.dto.file.UploadFileRequest;
 import com.app.project.model.enums.FileUploadBizEnum;
 import com.app.project.model.vo.LoginUserVO;
+import com.app.project.model.vo.UserVO;
 import com.app.project.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -58,7 +59,7 @@ public class FileController {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         validFile(multipartFile, fileUploadBizEnum);
-        LoginUserVO loginUser = userService.getLoginUser(request);
+        UserVO loginUser = userService.getLoginUser(request);
         // 文件目录：根据业务、用户来划分
         String uuid = RandomStringUtils.randomAlphanumeric(8);
         String filename = uuid + "-" + multipartFile.getOriginalFilename();

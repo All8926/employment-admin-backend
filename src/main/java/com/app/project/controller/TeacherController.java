@@ -15,6 +15,7 @@ import com.app.project.model.dto.teacher.TeacherUpdateRequest;
 import com.app.project.model.entity.Teacher;
 import com.app.project.model.vo.LoginUserVO;
 import com.app.project.model.vo.TeacherVO;
+import com.app.project.model.vo.UserVO;
 import com.app.project.service.TeacherService;
 import com.app.project.service.UserService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -193,7 +194,7 @@ public class TeacherController {
         BeanUtils.copyProperties(teacherEditRequest, teacher);
         // 数据校验
         teacherService.validTeacher(teacher, false);
-        LoginUserVO loginUser = userService.getLoginUser(request);
+        UserVO loginUser = userService.getLoginUser(request);
 
         // 判断是否存在
         long id = teacherEditRequest.getId();

@@ -8,6 +8,7 @@ import com.app.project.exception.ThrowUtils;
 import com.app.project.mapper.UserMapper;
 import com.app.project.model.dto.user.UserLoginRequest;
 import com.app.project.model.dto.user.UserQueryRequest;
+import com.app.project.model.entity.Department;
 import com.app.project.model.entity.Student;
 import com.app.project.model.entity.Teacher;
 import com.app.project.model.entity.User;
@@ -15,6 +16,7 @@ import com.app.project.model.enums.RegisterStatusEnum;
 import com.app.project.model.enums.UserRoleEnum;
 import com.app.project.model.vo.LoginUserVO;
 import com.app.project.model.vo.UserVO;
+import com.app.project.service.DepartmentService;
 import com.app.project.service.StudentService;
 import com.app.project.service.TeacherService;
 import com.app.project.service.UserService;
@@ -57,6 +59,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Resource
     private TeacherService teacherService;
 
+    @Resource
+    private DepartmentService departmentService;
+
+    @Resource
+    private UserVOFactory userVOFactory;
+
     @Override
     public long userRegister(String userAccount, String userPassword, String checkPassword) {
         // 1. 校验
@@ -96,7 +104,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public LoginUserVO userLogin(UserLoginRequest userLoginRequest, HttpServletRequest request) {
+    public UserVO userLogin(UserLoginRequest userLoginRequest, HttpServletRequest request) {
         String userAccount = userLoginRequest.getUserAccount();
         String userPassword = userLoginRequest.getUserPassword();
         String userRole = userLoginRequest.getUserRole();
@@ -109,7 +117,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         // 2. 密码加密
         String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
-        LoginUserVO loginUserVO = new LoginUserVO();
+        UserVO userVO = new UserVO();
         // 3.校验学生
         if (UserRoleEnum.STUDENT.getValue().equals(userRole)) {
             QueryWrapper<Student> studentQueryWrapper = new QueryWrapper<>();
@@ -117,7 +125,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             studentQueryWrapper.eq("userPassword", encryptPassword);
             Student student = studentService.getOne(studentQueryWrapper);
             ThrowUtils.throwIf(student == null, ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
-            BeanUtils.copyProperties(student, loginUserVO);
+            BeanUtils.copyProperties(student, userVO);
 
         }
 
@@ -128,22 +136,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             teacherQueryWrapper.eq("userPassword", encryptPassword);
             Teacher teacher = teacherService.getOne(teacherQueryWrapper);
             ThrowUtils.throwIf(teacher == null, ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
-            BeanUtils.copyProperties(teacher, loginUserVO);
+            BeanUtils.copyProperties(teacher, userVO);
 
         }
-        if(loginUserVO.getId() == null){
+        if(userVO.getId() == null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "登录失败，请联系管理员");
         }
 
         // 非管理员需校验注册状态
         if (!UserRoleEnum.ADMIN.getValue().equals(userAccount)) {
-            int status = loginUserVO.getStatus();
+            int status = userVO.getStatus();
             ThrowUtils.throwIf(status == RegisterStatusEnum.REJECTED.getValue(), ErrorCode.PARAMS_ERROR, "账号已被拒绝");
             ThrowUtils.throwIf(status == RegisterStatusEnum.PENDING.getValue(), ErrorCode.PARAMS_ERROR, "账号正在审核中");
         }
 
-        request.getSession().setAttribute(USER_LOGIN_STATE, loginUserVO);
-        return loginUserVO;
+        request.getSession().setAttribute(USER_LOGIN_STATE, userVO);
+        return userVO;
     }
 
     @Override
@@ -185,30 +193,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @return
      */
     @Override
-    public LoginUserVO getLoginUser(HttpServletRequest request) {
+    public UserVO getLoginUser(HttpServletRequest request) {
         // 先判断是否已登录
         Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
-        LoginUserVO currentUser = (LoginUserVO) userObj;
+        UserVO currentUser = (UserVO) userObj;
         if (currentUser == null || currentUser.getId() == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
         }
-        // 从数据库查询（追求性能的话可以注释，直接走缓存）
+
+        // 查询用户信息
         long userId = currentUser.getId();
-          String userRole = currentUser.getUserRole();
-        if (UserRoleEnum.TEACHER.getValue().equals(userRole) || UserRoleEnum.ADMIN.getValue().equals(userRole)) {
-              Teacher teacher = teacherService.getById(userId);
-              ThrowUtils.throwIf(teacher == null, ErrorCode.NOT_LOGIN_ERROR);
-              BeanUtils.copyProperties(teacher, currentUser);
-        }
-        if (UserRoleEnum.STUDENT.getValue().equals(userRole)) {
-            Student student = studentService.getById(userId);
-            ThrowUtils.throwIf(student == null, ErrorCode.NOT_LOGIN_ERROR);
-            BeanUtils.copyProperties(student, currentUser);
-        }
-        if (currentUser == null) {
-            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
-        }
-        return currentUser;
+        String userRole = currentUser.getUserRole();
+        UserVO userDetails = userVOFactory.getUserDetails(userId, userRole);
+
+        return userDetails;
     }
 
     /**

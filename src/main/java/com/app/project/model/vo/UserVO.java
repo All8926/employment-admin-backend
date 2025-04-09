@@ -13,30 +13,18 @@ import lombok.Data;
 @Data
 public class UserVO implements Serializable {
 
-    /**
-     * id
-     */
     private Long id;
-
-    /**
-     * 用户昵称
-     */
+    private String userAccount;
     private String userName;
-
-    /**
-     * 用户头像
-     */
     private String userAvatar;
-
-    /**
-     * 用户简介
-     */
+    private Integer gender;
+    private String phone;
+    private String email;
+    private Long deptId;
+    private String deptName;
+    private Integer status;
     private String userProfile;
-
-    /**
-     * 用户角色：user/admin/ban
-     */
-    private String userRole;
+    private String userRole; // admin/student/teacher/enterprise
 
     /**
      * 创建时间

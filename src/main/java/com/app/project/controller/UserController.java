@@ -82,7 +82,7 @@ public class UserController {
      * @return
      */
     @PostMapping("/login")
-    public BaseResponse<LoginUserVO> userLogin(@Valid  @RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
+    public BaseResponse<UserVO> userLogin(@Valid  @RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
         if (userLoginRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -92,32 +92,11 @@ public class UserController {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
           String userRole = userLoginRequest.getUserRole();
-        LoginUserVO loginUserVO = userService.userLogin(userLoginRequest, request);
-        return ResultUtils.success(loginUserVO);
+        UserVO userVO = userService.userLogin(userLoginRequest, request);
+        return ResultUtils.success(userVO);
     }
 
-    /**
-     * 用户登录（微信开放平台）
-     */
-    @GetMapping("/login/wx_open")
-    public BaseResponse<LoginUserVO> userLoginByWxOpen(HttpServletRequest request, HttpServletResponse response,
-            @RequestParam(value = "code" ) String code) {
-             WxOAuth2AccessToken accessToken;
-        try {
-            WxMpService wxService = wxOpenConfig.getWxMpService();
-            accessToken = wxService.getOAuth2Service().getAccessToken(code);
-            WxOAuth2UserInfo userInfo = wxService.getOAuth2Service().getUserInfo(accessToken, code);
-            String unionId = userInfo.getUnionId();
-            String mpOpenId = userInfo.getOpenid();
-            if (StringUtils.isAnyBlank(unionId, mpOpenId)) {
-                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "登录失败，系统错误");
-            }
-            return ResultUtils.success(userService.userLoginByMpOpen(userInfo, request));
-        } catch (Exception e) {
-            log.error("userLoginByWxOpen error", e);
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "登录失败，系统错误");
-        }
-    }
+
 
     /**
      * 用户注销
@@ -140,11 +119,11 @@ public class UserController {
      * @param request
      * @return
      */
-    @GetMapping("/get/login")
-    public BaseResponse<LoginUserVO> getLoginUser(HttpServletRequest request) {
-        LoginUserVO loginUserVO = userService.getLoginUser(request);
-//        return ResultUtils.success(userService.getLoginUserVO(loginUserVO));
-        return ResultUtils.success(loginUserVO);
+    @GetMapping("/get/info")
+    public BaseResponse<UserVO> getLoginUser(HttpServletRequest request) {
+        UserVO userVO = userService.getLoginUser(request);
+
+        return ResultUtils.success(userVO);
     }
 
     // endregion
@@ -303,7 +282,7 @@ public class UserController {
         if (userUpdateMyRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        LoginUserVO loginUser = userService.getLoginUser(request);
+        UserVO loginUser = userService.getLoginUser(request);
         User user = new User();
         BeanUtils.copyProperties(userUpdateMyRequest, user);
         user.setId(loginUser.getId());

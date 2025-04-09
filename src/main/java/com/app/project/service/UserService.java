@@ -36,7 +36,7 @@ public interface UserService extends IService<User> {
      * @param request
      * @return 脱敏后的用户信息
      */
-    LoginUserVO userLogin(UserLoginRequest userLoginRequest, HttpServletRequest request);
+    UserVO userLogin(UserLoginRequest userLoginRequest, HttpServletRequest request);
 
     /**
      * 用户登录（微信开放平台）
@@ -53,7 +53,7 @@ public interface UserService extends IService<User> {
      * @param request
      * @return
      */
-    LoginUserVO getLoginUser(HttpServletRequest request);
+    UserVO getLoginUser(HttpServletRequest request);
 
     /**
      * 获取当前登录用户（允许未登录）
