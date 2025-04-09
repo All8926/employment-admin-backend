@@ -8,7 +8,6 @@ import com.app.project.common.ResultUtils;
 import com.app.project.constant.UserConstant;
 import com.app.project.model.dto.department.DepartmentAddRequest;
 import com.app.project.model.dto.department.DepartmentUpdateRequest;
-import com.app.project.model.entity.User;
 import com.app.project.model.vo.DepartmentTreeVO;
 import com.app.project.service.DepartmentService;
 import com.app.project.service.UserService;
@@ -37,7 +36,7 @@ public class DepartmentController {
     @PostMapping("/add")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> addDepartment(@Valid @RequestBody DepartmentAddRequest departmentAddRequest, HttpServletRequest request) {
-        User loginUser = userService.getLoginUser(request);
+//        User loginUser = userService.getLoginUser(request);
 
         boolean result = departmentService.addDepartment(departmentAddRequest);
         return ResultUtils.success(result);

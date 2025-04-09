@@ -1,8 +1,9 @@
 package com.app.project.model.vo;
 
+import lombok.Data;
+
 import java.io.Serializable;
 import java.util.Date;
-import lombok.Data;
 
 /**
  * 已登录用户视图（脱敏）
@@ -42,6 +43,16 @@ public class LoginUserVO implements Serializable {
      * 用户角色：user/admin/ban
      */
     private String userRole;
+
+    /**
+     * 部门id
+     */
+    private Long deptId;
+
+    /**
+     * 状态 0-待审核 1-已通过 2-已拒绝
+     */
+    private Integer status;
 
     /**
      * 创建时间

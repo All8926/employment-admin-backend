@@ -8,13 +8,9 @@ import com.app.project.constant.FileConstant;
 import com.app.project.exception.BusinessException;
 import com.app.project.manager.CosManager;
 import com.app.project.model.dto.file.UploadFileRequest;
-import com.app.project.model.entity.User;
 import com.app.project.model.enums.FileUploadBizEnum;
+import com.app.project.model.vo.LoginUserVO;
 import com.app.project.service.UserService;
-import java.io.File;
-import java.util.Arrays;
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,6 +18,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import java.io.File;
+import java.util.Arrays;
 
 /**
  * 文件接口
@@ -57,7 +58,7 @@ public class FileController {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         validFile(multipartFile, fileUploadBizEnum);
-        User loginUser = userService.getLoginUser(request);
+        LoginUserVO loginUser = userService.getLoginUser(request);
         // 文件目录：根据业务、用户来划分
         String uuid = RandomStringUtils.randomAlphanumeric(8);
         String filename = uuid + "-" + multipartFile.getOriginalFilename();

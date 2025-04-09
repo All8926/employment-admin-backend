@@ -11,6 +11,7 @@ import com.app.project.model.dto.user.UserQueryRequest;
 import com.app.project.model.entity.Student;
 import com.app.project.model.entity.Teacher;
 import com.app.project.model.entity.User;
+import com.app.project.model.enums.RegisterStatusEnum;
 import com.app.project.model.enums.UserRoleEnum;
 import com.app.project.model.vo.LoginUserVO;
 import com.app.project.model.vo.UserVO;
@@ -117,7 +118,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             Student student = studentService.getOne(studentQueryWrapper);
             ThrowUtils.throwIf(student == null, ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
             BeanUtils.copyProperties(student, loginUserVO);
-            request.getSession().setAttribute(USER_LOGIN_STATE, student);
+
         }
 
         // 4.校验教师/管理员
@@ -128,11 +129,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             Teacher teacher = teacherService.getOne(teacherQueryWrapper);
             ThrowUtils.throwIf(teacher == null, ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
             BeanUtils.copyProperties(teacher, loginUserVO);
-            request.getSession().setAttribute(USER_LOGIN_STATE, teacher);
+
         }
         if(loginUserVO.getId() == null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "登录失败，请联系管理员");
         }
+
+        // 非管理员需校验注册状态
+        if (!UserRoleEnum.ADMIN.getValue().equals(userAccount)) {
+            int status = loginUserVO.getStatus();
+            ThrowUtils.throwIf(status == RegisterStatusEnum.REJECTED.getValue(), ErrorCode.PARAMS_ERROR, "账号已被拒绝");
+            ThrowUtils.throwIf(status == RegisterStatusEnum.PENDING.getValue(), ErrorCode.PARAMS_ERROR, "账号正在审核中");
+        }
+
+        request.getSession().setAttribute(USER_LOGIN_STATE, loginUserVO);
         return loginUserVO;
     }
 
@@ -175,16 +185,26 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @return
      */
     @Override
-    public User getLoginUser(HttpServletRequest request) {
+    public LoginUserVO getLoginUser(HttpServletRequest request) {
         // 先判断是否已登录
         Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
-        User currentUser = (User) userObj;
+        LoginUserVO currentUser = (LoginUserVO) userObj;
         if (currentUser == null || currentUser.getId() == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
         }
         // 从数据库查询（追求性能的话可以注释，直接走缓存）
         long userId = currentUser.getId();
-        currentUser = this.getById(userId);
+          String userRole = currentUser.getUserRole();
+        if (UserRoleEnum.TEACHER.getValue().equals(userRole) || UserRoleEnum.ADMIN.getValue().equals(userRole)) {
+              Teacher teacher = teacherService.getById(userId);
+              ThrowUtils.throwIf(teacher == null, ErrorCode.NOT_LOGIN_ERROR);
+              BeanUtils.copyProperties(teacher, currentUser);
+        }
+        if (UserRoleEnum.STUDENT.getValue().equals(userRole)) {
+            Student student = studentService.getById(userId);
+            ThrowUtils.throwIf(student == null, ErrorCode.NOT_LOGIN_ERROR);
+            BeanUtils.copyProperties(student, currentUser);
+        }
         if (currentUser == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
         }

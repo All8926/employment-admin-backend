@@ -1,7 +1,5 @@
 package com.app.project.controller;
 
-import com.app.project.model.enums.RegisterStatusEnum;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.app.project.annotation.AuthCheck;
 import com.app.project.common.BaseResponse;
 import com.app.project.common.DeleteRequest;
@@ -15,10 +13,11 @@ import com.app.project.model.dto.teacher.TeacherEditRequest;
 import com.app.project.model.dto.teacher.TeacherQueryRequest;
 import com.app.project.model.dto.teacher.TeacherUpdateRequest;
 import com.app.project.model.entity.Teacher;
-import com.app.project.model.entity.User;
+import com.app.project.model.vo.LoginUserVO;
 import com.app.project.model.vo.TeacherVO;
 import com.app.project.service.TeacherService;
 import com.app.project.service.UserService;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -194,13 +193,14 @@ public class TeacherController {
         BeanUtils.copyProperties(teacherEditRequest, teacher);
         // 数据校验
         teacherService.validTeacher(teacher, false);
-        User loginUser = userService.getLoginUser(request);
+        LoginUserVO loginUser = userService.getLoginUser(request);
+
         // 判断是否存在
         long id = teacherEditRequest.getId();
         Teacher oldTeacher = teacherService.getById(id);
         ThrowUtils.throwIf(oldTeacher == null, ErrorCode.NOT_FOUND_ERROR);
         // 仅本人或管理员可编辑
-        if (!oldTeacher.getId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
+        if (!oldTeacher.getId().equals(loginUser.getId())) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
         // 操作数据库

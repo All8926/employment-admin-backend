@@ -1,7 +1,6 @@
 package com.app.project.controller;
 
 import cn.hutool.json.JSONUtil;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.app.project.annotation.AuthCheck;
 import com.app.project.common.BaseResponse;
 import com.app.project.common.DeleteRequest;
@@ -16,19 +15,18 @@ import com.app.project.model.dto.post.PostQueryRequest;
 import com.app.project.model.dto.post.PostUpdateRequest;
 import com.app.project.model.entity.Post;
 import com.app.project.model.entity.User;
+import com.app.project.model.vo.LoginUserVO;
 import com.app.project.model.vo.PostVO;
 import com.app.project.service.PostService;
 import com.app.project.service.UserService;
-import java.util.List;
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * 帖子接口
@@ -68,7 +66,7 @@ public class PostController {
             post.setTags(JSONUtil.toJsonStr(tags));
         }
         postService.validPost(post, true);
-        User loginUser = userService.getLoginUser(request);
+        LoginUserVO loginUser = userService.getLoginUser(request);
         post.setUserId(loginUser.getId());
         post.setFavourNum(0);
         post.setThumbNum(0);
@@ -90,7 +88,7 @@ public class PostController {
         if (deleteRequest == null || deleteRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        User user = userService.getLoginUser(request);
+        LoginUserVO user = userService.getLoginUser(request);
         long id = deleteRequest.getId();
         // 判断是否存在
         Post oldPost = postService.getById(id);
@@ -197,7 +195,7 @@ public class PostController {
         if (postQueryRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        User loginUser = userService.getLoginUser(request);
+        LoginUserVO loginUser = userService.getLoginUser(request);
         postQueryRequest.setUserId(loginUser.getId());
         long current = postQueryRequest.getCurrent();
         long size = postQueryRequest.getPageSize();
@@ -247,13 +245,15 @@ public class PostController {
         }
         // 参数校验
         postService.validPost(post, false);
-        User loginUser = userService.getLoginUser(request);
+        LoginUserVO loginUser = userService.getLoginUser(request);
+        final User user = new User();
+        BeanUtils.copyProperties(loginUser, user);
         long id = postEditRequest.getId();
         // 判断是否存在
         Post oldPost = postService.getById(id);
         ThrowUtils.throwIf(oldPost == null, ErrorCode.NOT_FOUND_ERROR);
         // 仅本人或管理员可编辑
-        if (!oldPost.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
+        if (!oldPost.getUserId().equals(loginUser.getId()) && !userService.isAdmin(user)) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
         boolean result = postService.updateById(post);

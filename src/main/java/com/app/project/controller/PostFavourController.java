@@ -1,6 +1,5 @@
 package com.app.project.controller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.app.project.common.BaseResponse;
 import com.app.project.common.ErrorCode;
 import com.app.project.common.ResultUtils;
@@ -11,17 +10,21 @@ import com.app.project.model.dto.postfavour.PostFavourAddRequest;
 import com.app.project.model.dto.postfavour.PostFavourQueryRequest;
 import com.app.project.model.entity.Post;
 import com.app.project.model.entity.User;
+import com.app.project.model.vo.LoginUserVO;
 import com.app.project.model.vo.PostVO;
 import com.app.project.service.PostFavourService;
 import com.app.project.service.PostService;
 import com.app.project.service.UserService;
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * 帖子收藏接口
@@ -57,9 +60,11 @@ public class PostFavourController {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         // 登录才能操作
-        final User loginUser = userService.getLoginUser(request);
+        LoginUserVO loginUser = userService.getLoginUser(request);
+        final User user = new User();
+        BeanUtils.copyProperties(loginUser, user);
         long postId = postFavourAddRequest.getPostId();
-        int result = postFavourService.doPostFavour(postId, loginUser);
+        int result = postFavourService.doPostFavour(postId, user);
         return ResultUtils.success(result);
     }
 
@@ -75,7 +80,7 @@ public class PostFavourController {
         if (postQueryRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        User loginUser = userService.getLoginUser(request);
+        LoginUserVO loginUser = userService.getLoginUser(request);
         long current = postQueryRequest.getCurrent();
         long size = postQueryRequest.getPageSize();
         // 限制爬虫

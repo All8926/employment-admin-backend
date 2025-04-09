@@ -1,8 +1,6 @@
 package com.app.project.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import cn.hutool.core.collection.CollUtil;
 import com.app.project.common.ErrorCode;
 import com.app.project.constant.CommonConstant;
 import com.app.project.exception.BusinessException;
@@ -21,16 +19,10 @@ import com.app.project.model.vo.UserVO;
 import com.app.project.service.PostService;
 import com.app.project.service.UserService;
 import com.app.project.utils.SqlUtils;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
-import cn.hutool.core.collection.CollUtil;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -45,6 +37,11 @@ import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 帖子服务实现
@@ -272,22 +269,22 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         Map<Long, Boolean> postIdHasThumbMap = new HashMap<>();
         Map<Long, Boolean> postIdHasFavourMap = new HashMap<>();
         User loginUser = userService.getLoginUserPermitNull(request);
-        if (loginUser != null) {
-            Set<Long> postIdSet = postList.stream().map(Post::getId).collect(Collectors.toSet());
-            loginUser = userService.getLoginUser(request);
-            // 获取点赞
-            QueryWrapper<PostThumb> postThumbQueryWrapper = new QueryWrapper<>();
-            postThumbQueryWrapper.in("postId", postIdSet);
-            postThumbQueryWrapper.eq("userId", loginUser.getId());
-            List<PostThumb> postPostThumbList = postThumbMapper.selectList(postThumbQueryWrapper);
-            postPostThumbList.forEach(postPostThumb -> postIdHasThumbMap.put(postPostThumb.getPostId(), true));
-            // 获取收藏
-            QueryWrapper<PostFavour> postFavourQueryWrapper = new QueryWrapper<>();
-            postFavourQueryWrapper.in("postId", postIdSet);
-            postFavourQueryWrapper.eq("userId", loginUser.getId());
-            List<PostFavour> postFavourList = postFavourMapper.selectList(postFavourQueryWrapper);
-            postFavourList.forEach(postFavour -> postIdHasFavourMap.put(postFavour.getPostId(), true));
-        }
+//        if (loginUser != null) {
+//            Set<Long> postIdSet = postList.stream().map(Post::getId).collect(Collectors.toSet());
+//            loginUser = userService.getLoginUser(request);
+//            // 获取点赞
+//            QueryWrapper<PostThumb> postThumbQueryWrapper = new QueryWrapper<>();
+//            postThumbQueryWrapper.in("postId", postIdSet);
+//            postThumbQueryWrapper.eq("userId", loginUser.getId());
+//            List<PostThumb> postPostThumbList = postThumbMapper.selectList(postThumbQueryWrapper);
+//            postPostThumbList.forEach(postPostThumb -> postIdHasThumbMap.put(postPostThumb.getPostId(), true));
+//            // 获取收藏
+//            QueryWrapper<PostFavour> postFavourQueryWrapper = new QueryWrapper<>();
+//            postFavourQueryWrapper.in("postId", postIdSet);
+//            postFavourQueryWrapper.eq("userId", loginUser.getId());
+//            List<PostFavour> postFavourList = postFavourMapper.selectList(postFavourQueryWrapper);
+//            postFavourList.forEach(postFavour -> postIdHasFavourMap.put(postFavour.getPostId(), true));
+//        }
         // 填充信息
         List<PostVO> postVOList = postList.stream().map(post -> {
             PostVO postVO = PostVO.objToVo(post);

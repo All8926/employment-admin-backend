@@ -3,8 +3,8 @@ package com.app.project.aop;
 import com.app.project.annotation.AuthCheck;
 import com.app.project.common.ErrorCode;
 import com.app.project.exception.BusinessException;
-import com.app.project.model.entity.User;
 import com.app.project.model.enums.UserRoleEnum;
+import com.app.project.model.vo.LoginUserVO;
 import com.app.project.service.UserService;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -43,7 +43,7 @@ public class AuthInterceptor {
         RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
         HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
         // 当前登录用户
-        User loginUser = userService.getLoginUser(request);
+        LoginUserVO loginUser = userService.getLoginUser(request);
         UserRoleEnum mustRoleEnum = UserRoleEnum.getEnumByValue(mustRole);
         // 不需要权限，放行
         if (mustRoleEnum == null) {

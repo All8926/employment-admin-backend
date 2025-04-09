@@ -142,8 +142,9 @@ public class UserController {
      */
     @GetMapping("/get/login")
     public BaseResponse<LoginUserVO> getLoginUser(HttpServletRequest request) {
-        User user = userService.getLoginUser(request);
-        return ResultUtils.success(userService.getLoginUserVO(user));
+        LoginUserVO loginUserVO = userService.getLoginUser(request);
+//        return ResultUtils.success(userService.getLoginUserVO(loginUserVO));
+        return ResultUtils.success(loginUserVO);
     }
 
     // endregion
@@ -302,7 +303,7 @@ public class UserController {
         if (userUpdateMyRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        User loginUser = userService.getLoginUser(request);
+        LoginUserVO loginUser = userService.getLoginUser(request);
         User user = new User();
         BeanUtils.copyProperties(userUpdateMyRequest, user);
         user.setId(loginUser.getId());

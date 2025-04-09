@@ -1,6 +1,5 @@
 package com.app.project.controller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.app.project.annotation.AuthCheck;
 import com.app.project.common.BaseResponse;
 import com.app.project.common.DeleteRequest;
@@ -14,10 +13,11 @@ import com.app.project.model.dto.student.StudentEditRequest;
 import com.app.project.model.dto.student.StudentQueryRequest;
 import com.app.project.model.dto.student.StudentUpdateRequest;
 import com.app.project.model.entity.Student;
-import com.app.project.model.entity.User;
+import com.app.project.model.vo.LoginUserVO;
 import com.app.project.model.vo.StudentVO;
 import com.app.project.service.StudentService;
 import com.app.project.service.UserService;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -78,7 +78,7 @@ public class StudentController {
         if (deleteRequest == null || deleteRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        User user = userService.getLoginUser(request);
+        LoginUserVO user = userService.getLoginUser(request);
         long id = deleteRequest.getId();
         // 判断是否存在
         Student oldStudent = studentService.getById(id);
@@ -194,7 +194,7 @@ public class StudentController {
         BeanUtils.copyProperties(studentEditRequest, student);
         // 数据校验
         studentService.validStudent(student, false);
-        User loginUser = userService.getLoginUser(request);
+//        User loginUser = userService.getLoginUser(request);
         // 判断是否存在
         long id = studentEditRequest.getId();
         Student oldStudent = studentService.getById(id);

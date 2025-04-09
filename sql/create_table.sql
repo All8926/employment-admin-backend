@@ -46,6 +46,7 @@ create table if not exists department
 ) comment '部门表' collate = utf8mb4_unicode_ci;
 
 -- 教师信息表
+use employment_admin;
 create table if not exists teacher
 (
     id             bigint auto_increment comment 'id' primary key,
