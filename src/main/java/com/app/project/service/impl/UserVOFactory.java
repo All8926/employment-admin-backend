@@ -5,13 +5,16 @@ import com.app.project.exception.BusinessException;
 import com.app.project.exception.ThrowUtils;
 import com.app.project.model.dto.student.StudentEditRequest;
 import com.app.project.model.entity.Department;
+import com.app.project.model.entity.Enterprise;
 import com.app.project.model.entity.Student;
 import com.app.project.model.entity.Teacher;
 import com.app.project.model.enums.UserRoleEnum;
+import com.app.project.model.vo.EnterpriseVO;
 import com.app.project.model.vo.StudentVO;
 import com.app.project.model.vo.TeacherVO;
 import com.app.project.model.vo.UserVO;
 import com.app.project.service.DepartmentService;
+import com.app.project.service.EnterpriseService;
 import com.app.project.service.StudentService;
 import com.app.project.service.TeacherService;
 import org.springframework.beans.BeanUtils;
@@ -32,6 +35,9 @@ public class UserVOFactory {
     private TeacherService teacherService;
 
     @Resource
+    private EnterpriseService enterpriseService;
+
+    @Resource
     private DepartmentService departmentService;
 
     public UserVO getUserDetails(Long userId, String role) {
@@ -43,6 +49,9 @@ public class UserVOFactory {
         }
         if(UserRoleEnum.ADMIN.getValue().equals(role)){
             return getTeacherDetails(userId);
+        }
+        if(UserRoleEnum.ENTERPRISE.getValue().equals(role)){
+            return getEnterpriseDetails(userId);
         }
         throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
     }
@@ -81,16 +90,14 @@ public class UserVOFactory {
         return teacherVO;
     }
 
-    private Boolean editStudent(StudentEditRequest studentEditRequest){
-        long id = studentEditRequest.getId();
-        ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
-        Student oldStudent = studentService.getById(id);
-        ThrowUtils.throwIf(oldStudent == null, ErrorCode.NOT_FOUND_ERROR,"用户不存在");
-        final Student student = new Student();
-        BeanUtils.copyProperties(studentEditRequest, student);
-          boolean update = studentService.updateById(student);
-          ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR);
-          return true;
+    private EnterpriseVO getEnterpriseDetails(Long userId) {
+        // 从企业表中查询企业信息并返回 EnterpriseVO
+        Enterprise enterprise = enterpriseService.getById(userId);
+        ThrowUtils.throwIf(enterprise == null, ErrorCode.NOT_FOUND_ERROR);
+        EnterpriseVO enterpriseVO = new EnterpriseVO();
+        BeanUtils.copyProperties(enterprise, enterpriseVO);
+        return  enterpriseVO;
     }
+
 
 }

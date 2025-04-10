@@ -23,6 +23,11 @@ public class DepartmentTreeVO implements Serializable {
     private String name;
 
     /**
+     * 上级部门ID
+     */
+    private Long parentId;
+
+    /**
      * 排序
      */
     private Integer sort;

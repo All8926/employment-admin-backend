@@ -1,6 +1,5 @@
 package com.app.project.mapper;
 
-import com.app.project.model.entity.Post;
 import java.util.Date;
 import java.util.List;
 import javax.annotation.Resource;

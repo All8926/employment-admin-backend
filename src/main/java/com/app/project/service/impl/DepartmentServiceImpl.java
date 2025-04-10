@@ -14,10 +14,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 /**
@@ -56,7 +53,8 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
     @Override
     public boolean updateDepartment(DepartmentUpdateRequest departmentUpdateRequest) {
         // 1. 判断要修改的部门是否存在
-        Department oldDept = this.getById(departmentUpdateRequest.getId());
+        long updateRequestId = departmentUpdateRequest.getId();
+        Department oldDept = this.getById(updateRequestId);
         ThrowUtils.throwIf(oldDept == null, ErrorCode.NOT_FOUND_ERROR, "部门不存在");
 
         // 2. 校验名称是否重复（排除自己）
@@ -72,6 +70,9 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
             ThrowUtils.throwIf(parent == null, ErrorCode.PARAMS_ERROR, "父级部门不存在");
             // 防止设置自己为自己的父部门
             ThrowUtils.throwIf(parentId.equals(departmentUpdateRequest.getId()), ErrorCode.PARAMS_ERROR, "不能将自己设置为自己的父部门");
+
+            Set<Long> allChildIds = getAllChildDepartmentIds(updateRequestId);
+            ThrowUtils.throwIf(allChildIds.contains(parentId), ErrorCode.PARAMS_ERROR, "不能将子部门设置为上级部门");
         }
 
         // 4. 更新
@@ -113,9 +114,7 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
 
         for (Department dept : departmentList) {
             DepartmentTreeVO node = new DepartmentTreeVO();
-            node.setId(dept.getId());
-            node.setName(dept.getName());
-            node.setSort(dept.getSort());
+            BeanUtils.copyProperties(dept, node);
             idToNodeMap.put(node.getId(), node);
         }
 
@@ -135,6 +134,25 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
         }
 
         return rootList;
+    }
+
+    @Override
+    public Set<Long> getAllChildDepartmentIds(Long parentId) {
+        Set<Long> resultSet = new HashSet<>();
+        collectChildDeptIds(parentId, resultSet);
+        return resultSet;
+    }
+
+
+    private void collectChildDeptIds(Long currentId, Set<Long> collector) {
+        // 查询当前节点的直接子部门
+        List<Department> children = this.list(new QueryWrapper<Department>().eq("parentId", currentId));
+        for (Department child : children) {
+            Long childId = child.getId();
+            if (collector.add(childId)) { // 避免死循环
+                collectChildDeptIds(childId, collector); // 递归收集
+            }
+        }
     }
 }
 

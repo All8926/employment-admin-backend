@@ -47,22 +47,10 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student>
      */
     public static final String SALT = "xxx";
 
-//    @Autowired
-//    private UserService userService;
 
     @Resource
     private DepartmentService departmentService;
 
-    /**
-     * 校验数据
-     *
-     * @param student
-     * @param add     对创建的数据进行校验
-     */
-    @Override
-    public void validStudent(Student student, boolean add) {
-
-    }
 
     /**
      * 获取查询条件
@@ -103,15 +91,15 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student>
         queryWrapper.eq(ObjectUtils.isNotEmpty(status), "status", status);
 
         String userRole = loginUser.getUserRole();
-        final Long deptId = loginUser.getDeptId();
+       long deptId = loginUser.getDeptId();
 
         // 非管理员只能查询本部门的学生
         if (!UserRoleEnum.ADMIN.getValue().equals(userRole)) {
             // 1. 查询所有部门
             List<Department> allDepartments = departmentService.list();
             // 2. 递归获取所有下级部门 ID
-            Set<Long> deptIds = new HashSet<>();
-            collectSubDepartmentIds(loginUser.getDeptId(), allDepartments, deptIds);
+            Set<Long> deptIds = departmentService.getAllChildDepartmentIds(deptId);
+//            collectSubDepartmentIds(loginUser.getDeptId(), allDepartments, deptIds);
             // 3. 包含当前部门本身
             deptIds.add(deptId);
             // 4. 添加条件
@@ -131,8 +119,8 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student>
         List<Department> allDepartments = departmentService.list();
 
         // 2. 递归获取所有下级部门 ID
-        Set<Long> deptIds = new HashSet<>();
-        collectSubDepartmentIds(departmentId, allDepartments, deptIds);
+        Set<Long> deptIds = departmentService.getAllChildDepartmentIds(departmentId);
+//        collectSubDepartmentIds(departmentId, allDepartments, deptIds);
 
         // 包含当前部门本身
         deptIds.add(departmentId);
@@ -148,20 +136,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student>
           }).collect(Collectors.toList());
     }
 
-    /**
-     * 递归获取所有下级部门 ID
-     * @param parentId
-     * @param allDepartments
-     * @param result
-     */
-    private void collectSubDepartmentIds(Long parentId, List<Department> allDepartments, Set<Long> result) {
-        for (Department dept : allDepartments) {
-            if (parentId.equals(dept.getParentId())) {
-                result.add(dept.getId());
-                collectSubDepartmentIds(dept.getId(), allDepartments, result); // 递归找下级
-            }
-        }
-    }
+
 
     /**
      * 获取学生信息封装

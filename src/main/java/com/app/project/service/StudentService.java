@@ -20,13 +20,6 @@ import java.util.List;
 */
 public interface StudentService extends IService<Student> {
 
-    /**
-     * 校验数据
-     *
-     * @param student
-     * @param add 对创建的数据进行校验
-     */
-    void validStudent(Student student, boolean add);
 
 
 

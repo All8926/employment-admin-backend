@@ -109,8 +109,7 @@ public class StudentController {
         // todo 在此处将实体类和 DTO 进行转换
         Student student = new Student();
         BeanUtils.copyProperties(studentUpdateRequest, student);
-        // 数据校验
-        studentService.validStudent(student, false);
+
         // 判断是否存在
         long id = studentUpdateRequest.getId();
         Student oldStudent = studentService.getById(id);
@@ -121,39 +120,7 @@ public class StudentController {
         return ResultUtils.success(true);
     }
 
-    /**
-     * 根据 id 获取学生信息（封装类）
-     *
-     * @param id
-     * @return
-     */
-//    @ApiOperation(value = "根据 id 获取学生信息（封装类）")
-//    @GetMapping("/get/vo")
-//    public BaseResponse<StudentVO> getStudentVOById(long id, HttpServletRequest request) {
-//        ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
-//        // 查询数据库
-//        Student student = studentService.getById(id);
-//        ThrowUtils.throwIf(student == null, ErrorCode.NOT_FOUND_ERROR);
-//        // 获取封装类
-//        return ResultUtils.success(studentService.getStudentVO(student, request));
-//    }
 
-    /**
-     * 分页获取学生信息列表（仅管理员可用）
-     *
-     * @param studentQueryRequest
-     * @return
-     */
-//    @PostMapping("/list/page")
-//    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-//    public BaseResponse<Page<Student>> listStudentByPage(@RequestBody StudentQueryRequest studentQueryRequest) {
-//        long current = studentQueryRequest.getCurrent();
-//        long size = studentQueryRequest.getPageSize();
-//        // 查询数据库
-//        Page<Student> studentPage = studentService.page(new Page<>(current, size),
-//                studentService.getQueryWrapper(studentQueryRequest));
-//        return ResultUtils.success(studentPage);
-//    }
 
     /**
      * 分页获取学生信息列表（封装类）
@@ -202,7 +169,7 @@ public class StudentController {
         long id = studentEditRequest.getId();
         Student oldStudent = studentService.getById(id);
         ThrowUtils.throwIf(oldStudent == null, ErrorCode.NOT_FOUND_ERROR);
-        // 仅本人或管理员可编辑
+        // 仅本人可编辑
         if (!oldStudent.getId().equals(id)) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }

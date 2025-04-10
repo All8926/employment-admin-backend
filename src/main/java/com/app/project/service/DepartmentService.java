@@ -9,6 +9,7 @@ import com.app.project.model.vo.DepartmentTreeVO;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -44,4 +45,11 @@ public interface DepartmentService extends IService<Department> {
      * @return
      */
     List<DepartmentTreeVO> getDepartmentTree();
+
+    /**
+     * 获取所有子部门id
+     * @param parentId
+     * @return
+     */
+    public Set<Long> getAllChildDepartmentIds(Long parentId);
 }

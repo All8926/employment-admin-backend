@@ -8,18 +8,12 @@ import com.app.project.exception.ThrowUtils;
 import com.app.project.mapper.UserMapper;
 import com.app.project.model.dto.user.UserLoginRequest;
 import com.app.project.model.dto.user.UserQueryRequest;
-import com.app.project.model.entity.Department;
-import com.app.project.model.entity.Student;
-import com.app.project.model.entity.Teacher;
-import com.app.project.model.entity.User;
+import com.app.project.model.entity.*;
 import com.app.project.model.enums.RegisterStatusEnum;
 import com.app.project.model.enums.UserRoleEnum;
 import com.app.project.model.vo.LoginUserVO;
 import com.app.project.model.vo.UserVO;
-import com.app.project.service.DepartmentService;
-import com.app.project.service.StudentService;
-import com.app.project.service.TeacherService;
-import com.app.project.service.UserService;
+import com.app.project.service.*;
 import com.app.project.utils.SqlUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -60,7 +54,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private TeacherService teacherService;
 
     @Resource
-    private DepartmentService departmentService;
+    private EnterpriseService enterpriseService;
 
     @Resource
     private UserVOFactory userVOFactory;
@@ -139,6 +133,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             BeanUtils.copyProperties(teacher, userVO);
 
         }
+
+        // 5.校验企业员工
+        if (UserRoleEnum.ENTERPRISE.getValue().equals(userRole)) {
+            QueryWrapper<Enterprise> enterpriseQueryWrapper = new QueryWrapper<>();
+            enterpriseQueryWrapper.eq("userAccount", userAccount);
+            enterpriseQueryWrapper.eq("userPassword", encryptPassword);
+            Enterprise enterprise = enterpriseService.getOne(enterpriseQueryWrapper);
+            ThrowUtils.throwIf(enterprise == null, ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
+            BeanUtils.copyProperties(enterprise, userVO);
+        }
+
         if(userVO.getId() == null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "登录失败，请联系管理员");
         }
@@ -154,37 +159,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return userVO;
     }
 
-    @Override
-    public LoginUserVO userLoginByMpOpen(WxOAuth2UserInfo wxOAuth2UserInfo, HttpServletRequest request) {
-        String unionId = wxOAuth2UserInfo.getUnionId();
-        String mpOpenId = wxOAuth2UserInfo.getOpenid();
-        // 单机锁
-        synchronized (unionId.intern()) {
-            // 查询用户是否已存在
-            QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("unionId", unionId);
-            User user = this.getOne(queryWrapper);
-            // 被封号，禁止登录
-            if (user != null && UserRoleEnum.BAN.getValue().equals(user.getUserRole())) {
-                throw new BusinessException(ErrorCode.FORBIDDEN_ERROR, "该用户已被封，禁止登录");
-            }
-            // 用户不存在则创建
-            if (user == null) {
-                user = new User();
-                user.setUnionId(unionId);
-                user.setMpOpenId(mpOpenId);
-                user.setUserAvatar(wxOAuth2UserInfo.getHeadImgUrl());
-                user.setUserName(wxOAuth2UserInfo.getNickname());
-                boolean result = this.save(user);
-                if (!result) {
-                    throw new BusinessException(ErrorCode.SYSTEM_ERROR, "登录失败");
-                }
-            }
-            // 记录用户的登录态
-            request.getSession().setAttribute(USER_LOGIN_STATE, user);
-            return getLoginUserVO(user);
-        }
-    }
+
 
     /**
      * 获取当前登录用户
@@ -209,43 +184,26 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return userDetails;
     }
 
-    /**
-     * 获取当前登录用户（允许未登录）
-     *
-     * @param request
-     * @return
-     */
-    @Override
-    public User getLoginUserPermitNull(HttpServletRequest request) {
-        // 先判断是否已登录
-        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
-        User currentUser = (User) userObj;
-        if (currentUser == null || currentUser.getId() == null) {
-            return null;
-        }
-        // 从数据库查询（追求性能的话可以注释，直接走缓存）
-        long userId = currentUser.getId();
-        return this.getById(userId);
-    }
 
-    /**
-     * 是否为管理员
-     *
-     * @param request
-     * @return
-     */
-    @Override
-    public boolean isAdmin(HttpServletRequest request) {
-        // 仅管理员可查询
-        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
-        User user = (User) userObj;
-        return isAdmin(user);
-    }
 
-    @Override
-    public boolean isAdmin(User user) {
-        return user != null && UserRoleEnum.ADMIN.getValue().equals(user.getUserRole());
-    }
+//    /**
+//     * 是否为管理员
+//     *
+//     * @param request
+//     * @return
+//     */
+//    @Override
+//    public boolean isAdmin(HttpServletRequest request) {
+//        // 仅管理员可查询
+//        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+//        User user = (User) userObj;
+//        return isAdmin(user);
+//    }
+//
+//    @Override
+//    public boolean isAdmin(User user) {
+//        return user != null && UserRoleEnum.ADMIN.getValue().equals(user.getUserRole());
+//    }
 
     /**
      * 用户注销
@@ -262,56 +220,5 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return true;
     }
 
-    @Override
-    public LoginUserVO getLoginUserVO(User user) {
-        if (user == null) {
-            return null;
-        }
-        LoginUserVO loginUserVO = new LoginUserVO();
-        BeanUtils.copyProperties(user, loginUserVO);
-        return loginUserVO;
-    }
 
-    @Override
-    public UserVO getUserVO(User user) {
-        if (user == null) {
-            return null;
-        }
-        UserVO userVO = new UserVO();
-        BeanUtils.copyProperties(user, userVO);
-        return userVO;
-    }
-
-    @Override
-    public List<UserVO> getUserVO(List<User> userList) {
-        if (CollUtil.isEmpty(userList)) {
-            return new ArrayList<>();
-        }
-        return userList.stream().map(this::getUserVO).collect(Collectors.toList());
-    }
-
-    @Override
-    public QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest) {
-        if (userQueryRequest == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数为空");
-        }
-        Long id = userQueryRequest.getId();
-        String unionId = userQueryRequest.getUnionId();
-        String mpOpenId = userQueryRequest.getMpOpenId();
-        String userName = userQueryRequest.getUserName();
-        String userProfile = userQueryRequest.getUserProfile();
-        String userRole = userQueryRequest.getUserRole();
-        String sortField = userQueryRequest.getSortField();
-        String sortOrder = userQueryRequest.getSortOrder();
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq(id != null, "id", id);
-        queryWrapper.eq(StringUtils.isNotBlank(unionId), "unionId", unionId);
-        queryWrapper.eq(StringUtils.isNotBlank(mpOpenId), "mpOpenId", mpOpenId);
-        queryWrapper.eq(StringUtils.isNotBlank(userRole), "userRole", userRole);
-        queryWrapper.like(StringUtils.isNotBlank(userProfile), "userProfile", userProfile);
-        queryWrapper.like(StringUtils.isNotBlank(userName), "userName", userName);
-        queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
-                sortField);
-        return queryWrapper;
-    }
 }
