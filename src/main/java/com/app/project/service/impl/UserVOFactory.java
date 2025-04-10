@@ -1,10 +1,13 @@
 package com.app.project.service.impl;
 
 import com.app.project.common.ErrorCode;
+import com.app.project.exception.BusinessException;
 import com.app.project.exception.ThrowUtils;
+import com.app.project.model.dto.student.StudentEditRequest;
 import com.app.project.model.entity.Department;
 import com.app.project.model.entity.Student;
 import com.app.project.model.entity.Teacher;
+import com.app.project.model.enums.UserRoleEnum;
 import com.app.project.model.vo.StudentVO;
 import com.app.project.model.vo.TeacherVO;
 import com.app.project.model.vo.UserVO;
@@ -32,22 +35,21 @@ public class UserVOFactory {
     private DepartmentService departmentService;
 
     public UserVO getUserDetails(Long userId, String role) {
-        switch (role) {
-            case "student":
-                // 查询学生信息
-                return getStudentDetails(userId);
-            case "teacher":
-                // 查询教师信息
-                return getTeacherDetails(userId);
-            case "admin":
-                // 查询管理信息
-                return getTeacherDetails(userId);
-            default:
-                throw new IllegalArgumentException("Unknown role: " + role);
+        if(UserRoleEnum.STUDENT.getValue().equals(role)){
+            return getStudentDetails(userId);
         }
+        if(UserRoleEnum.TEACHER.getValue().equals(role)){
+            return getTeacherDetails(userId);
+        }
+        if(UserRoleEnum.ADMIN.getValue().equals(role)){
+            return getTeacherDetails(userId);
+        }
+        throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
     }
 
-    private   StudentVO getStudentDetails(Long userId) {
+
+
+    private StudentVO getStudentDetails(Long userId) {
         // 从学生表中查询学生信息并返回 StudentVO
         Student student = studentService.getById(userId);
         ThrowUtils.throwIf(student == null, ErrorCode.NOT_FOUND_ERROR);
@@ -65,7 +67,6 @@ public class UserVOFactory {
 
     private TeacherVO getTeacherDetails(Long userId) {
         // 从教师表中查询教师信息并返回 TeacherVO
-        // 示例：
         Teacher teacher = teacherService.getById(userId);
         ThrowUtils.throwIf(teacher == null, ErrorCode.NOT_FOUND_ERROR);
         TeacherVO teacherVO = new TeacherVO();
@@ -78,6 +79,18 @@ public class UserVOFactory {
         }
         BeanUtils.copyProperties(teacher, teacherVO);
         return teacherVO;
+    }
+
+    private Boolean editStudent(StudentEditRequest studentEditRequest){
+        long id = studentEditRequest.getId();
+        ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
+        Student oldStudent = studentService.getById(id);
+        ThrowUtils.throwIf(oldStudent == null, ErrorCode.NOT_FOUND_ERROR,"用户不存在");
+        final Student student = new Student();
+        BeanUtils.copyProperties(studentEditRequest, student);
+          boolean update = studentService.updateById(student);
+          ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR);
+          return true;
     }
 
 }

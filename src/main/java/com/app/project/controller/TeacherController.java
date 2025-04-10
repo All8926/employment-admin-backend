@@ -13,7 +13,6 @@ import com.app.project.model.dto.teacher.TeacherEditRequest;
 import com.app.project.model.dto.teacher.TeacherQueryRequest;
 import com.app.project.model.dto.teacher.TeacherUpdateRequest;
 import com.app.project.model.entity.Teacher;
-import com.app.project.model.vo.LoginUserVO;
 import com.app.project.model.vo.TeacherVO;
 import com.app.project.model.vo.UserVO;
 import com.app.project.service.TeacherService;
@@ -192,15 +191,15 @@ public class TeacherController {
         // todo 在此处将实体类和 DTO 进行转换
         Teacher teacher = new Teacher();
         BeanUtils.copyProperties(teacherEditRequest, teacher);
-        // 数据校验
-        teacherService.validTeacher(teacher, false);
+
         UserVO loginUser = userService.getLoginUser(request);
 
         // 判断是否存在
         long id = teacherEditRequest.getId();
         Teacher oldTeacher = teacherService.getById(id);
         ThrowUtils.throwIf(oldTeacher == null, ErrorCode.NOT_FOUND_ERROR);
-        // 仅本人或管理员可编辑
+
+        // 仅本人可编辑
         if (!oldTeacher.getId().equals(loginUser.getId())) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }

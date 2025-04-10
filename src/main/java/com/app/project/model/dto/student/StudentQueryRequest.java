@@ -34,7 +34,7 @@ public class StudentQueryRequest extends PageRequest implements Serializable {
     /**
      * 部门id
      */
-    private Long deptId;
+//    private Long deptId;
 
 
     /**

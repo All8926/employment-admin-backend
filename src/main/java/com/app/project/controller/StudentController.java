@@ -13,16 +13,20 @@ import com.app.project.model.dto.student.StudentEditRequest;
 import com.app.project.model.dto.student.StudentQueryRequest;
 import com.app.project.model.dto.student.StudentUpdateRequest;
 import com.app.project.model.entity.Student;
-import com.app.project.model.vo.LoginUserVO;
 import com.app.project.model.vo.StudentVO;
+import com.app.project.model.vo.UserVO;
 import com.app.project.service.StudentService;
 import com.app.project.service.UserService;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -74,6 +78,7 @@ public class StudentController {
      * @return
      */
     @PostMapping("/delete")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> deleteStudent(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
         if (deleteRequest == null || deleteRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
@@ -82,10 +87,7 @@ public class StudentController {
         // 判断是否存在
         Student oldStudent = studentService.getById(id);
         ThrowUtils.throwIf(oldStudent == null, ErrorCode.NOT_FOUND_ERROR);
-        // 仅本人或管理员可删除
-//        if (!oldStudent.getUserId().equals(user.getId()) && !userService.isAdmin(request)) {
-//            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-//        }
+
         // 操作数据库
         boolean result = studentService.removeById(id);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
@@ -125,16 +127,16 @@ public class StudentController {
      * @param id
      * @return
      */
-    @ApiOperation(value = "根据 id 获取学生信息（封装类）")
-    @GetMapping("/get/vo")
-    public BaseResponse<StudentVO> getStudentVOById(long id, HttpServletRequest request) {
-        ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
-        // 查询数据库
-        Student student = studentService.getById(id);
-        ThrowUtils.throwIf(student == null, ErrorCode.NOT_FOUND_ERROR);
-        // 获取封装类
-        return ResultUtils.success(studentService.getStudentVO(student, request));
-    }
+//    @ApiOperation(value = "根据 id 获取学生信息（封装类）")
+//    @GetMapping("/get/vo")
+//    public BaseResponse<StudentVO> getStudentVOById(long id, HttpServletRequest request) {
+//        ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
+//        // 查询数据库
+//        Student student = studentService.getById(id);
+//        ThrowUtils.throwIf(student == null, ErrorCode.NOT_FOUND_ERROR);
+//        // 获取封装类
+//        return ResultUtils.success(studentService.getStudentVO(student, request));
+//    }
 
     /**
      * 分页获取学生信息列表（仅管理员可用）
@@ -142,16 +144,16 @@ public class StudentController {
      * @param studentQueryRequest
      * @return
      */
-    @PostMapping("/list/page")
-    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Page<Student>> listStudentByPage(@RequestBody StudentQueryRequest studentQueryRequest) {
-        long current = studentQueryRequest.getCurrent();
-        long size = studentQueryRequest.getPageSize();
-        // 查询数据库
-        Page<Student> studentPage = studentService.page(new Page<>(current, size),
-                studentService.getQueryWrapper(studentQueryRequest));
-        return ResultUtils.success(studentPage);
-    }
+//    @PostMapping("/list/page")
+//    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+//    public BaseResponse<Page<Student>> listStudentByPage(@RequestBody StudentQueryRequest studentQueryRequest) {
+//        long current = studentQueryRequest.getCurrent();
+//        long size = studentQueryRequest.getPageSize();
+//        // 查询数据库
+//        Page<Student> studentPage = studentService.page(new Page<>(current, size),
+//                studentService.getQueryWrapper(studentQueryRequest));
+//        return ResultUtils.success(studentPage);
+//    }
 
     /**
      * 分页获取学生信息列表（封装类）
@@ -162,15 +164,20 @@ public class StudentController {
      */
     @ApiOperation(value = "分页获取学生信息列表（封装类）")
     @PostMapping("/list/page/vo")
+    @AuthCheck(mustRoles = {UserConstant.ADMIN_ROLE, UserConstant.TEACHER_ROLE})
     public BaseResponse<Page<StudentVO>> listStudentVOByPage(@RequestBody StudentQueryRequest studentQueryRequest,
                                                                HttpServletRequest request) {
         long current = studentQueryRequest.getCurrent();
         long size = studentQueryRequest.getPageSize();
+          UserVO loginUser = userService.getLoginUser(request);
+
         // 限制爬虫
         ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
+        // 获取查询条件
+          QueryWrapper<Student> queryWrapper = studentService.getQueryWrapper(studentQueryRequest, loginUser);
+
         // 查询数据库
-        Page<Student> studentPage = studentService.page(new Page<>(current, size),
-                studentService.getQueryWrapper(studentQueryRequest));
+        Page<Student> studentPage = studentService.page(new Page<>(current, size),queryWrapper);
         // 获取封装类
         return ResultUtils.success(studentService.getStudentVOPage(studentPage, request));
     }
@@ -188,20 +195,17 @@ public class StudentController {
         if (studentEditRequest == null || studentEditRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        // todo 在此处将实体类和 DTO 进行转换
         Student student = new Student();
         BeanUtils.copyProperties(studentEditRequest, student);
-        // 数据校验
-        studentService.validStudent(student, false);
-//        User loginUser = userService.getLoginUser(request);
+
         // 判断是否存在
         long id = studentEditRequest.getId();
         Student oldStudent = studentService.getById(id);
         ThrowUtils.throwIf(oldStudent == null, ErrorCode.NOT_FOUND_ERROR);
         // 仅本人或管理员可编辑
-//        if (!oldStudent.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
-//            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-//        }
+        if (!oldStudent.getId().equals(id)) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+        }
         // 操作数据库
         boolean result = studentService.updateById(student);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);

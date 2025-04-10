@@ -5,6 +5,7 @@ import com.app.project.model.dto.student.StudentAddRequest;
 import com.app.project.model.dto.student.StudentQueryRequest;
 import com.app.project.model.entity.Student;
 import com.app.project.model.vo.StudentVO;
+import com.app.project.model.vo.UserVO;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -35,7 +36,7 @@ public interface StudentService extends IService<Student> {
      * @param studentQueryRequest
      * @return
      */
-    QueryWrapper<Student> getQueryWrapper(StudentQueryRequest studentQueryRequest);
+    QueryWrapper<Student> getQueryWrapper(StudentQueryRequest studentQueryRequest, UserVO userVO);
 
     /**
      * 获取学生信息封装

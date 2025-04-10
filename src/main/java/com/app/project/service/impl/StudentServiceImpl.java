@@ -11,17 +11,17 @@ import com.app.project.model.dto.student.StudentQueryRequest;
 import com.app.project.model.entity.Department;
 import com.app.project.model.entity.Student;
 import com.app.project.model.enums.RegisterStatusEnum;
+import com.app.project.model.enums.UserRoleEnum;
 import com.app.project.model.vo.StudentVO;
+import com.app.project.model.vo.UserVO;
 import com.app.project.service.DepartmentService;
 import com.app.project.service.StudentService;
-import com.app.project.service.UserService;
 import com.app.project.utils.SqlUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
@@ -71,7 +71,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student>
      * @return
      */
     @Override
-    public QueryWrapper<Student> getQueryWrapper(StudentQueryRequest studentQueryRequest) {
+    public QueryWrapper<Student> getQueryWrapper(StudentQueryRequest studentQueryRequest, UserVO loginUser) {
         QueryWrapper<Student> queryWrapper = new QueryWrapper<>();
         if (studentQueryRequest == null) {
             return queryWrapper;
@@ -87,7 +87,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student>
         String userAccount = studentQueryRequest.getUserAccount();
         String sortOrder = studentQueryRequest.getSortOrder();
         String sortField = studentQueryRequest.getSortField();
-        Long deptId = studentQueryRequest.getDeptId();
+//        Long deptId = studentQueryRequest.getDeptId();
 
         // 模糊查询
         queryWrapper.like(StringUtils.isNotBlank(userName), "userName", userName);
@@ -98,9 +98,25 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student>
 
         // 精确查询
         queryWrapper.eq(ObjectUtils.isNotEmpty(id), "id", id);
-        queryWrapper.eq(ObjectUtils.isNotEmpty(deptId), "deptId", deptId);
+//        queryWrapper.eq(ObjectUtils.isNotEmpty(deptId), "deptId", deptId);
         queryWrapper.eq(ObjectUtils.isNotEmpty(gender), "gender", gender);
         queryWrapper.eq(ObjectUtils.isNotEmpty(status), "status", status);
+
+        String userRole = loginUser.getUserRole();
+        final Long deptId = loginUser.getDeptId();
+
+        // 非管理员只能查询本部门的学生
+        if (!UserRoleEnum.ADMIN.getValue().equals(userRole)) {
+            // 1. 查询所有部门
+            List<Department> allDepartments = departmentService.list();
+            // 2. 递归获取所有下级部门 ID
+            Set<Long> deptIds = new HashSet<>();
+            collectSubDepartmentIds(loginUser.getDeptId(), allDepartments, deptIds);
+            // 3. 包含当前部门本身
+            deptIds.add(deptId);
+            // 4. 添加条件
+            queryWrapper.in("deptId", deptIds);
+        }
 
         // 排序规则
         queryWrapper.orderBy(SqlUtils.validSortField(sortField),
@@ -123,7 +139,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student>
 
         // 3. 查询学生表
         QueryWrapper<Student> queryWrapper = new QueryWrapper<Student>();
-        queryWrapper.in("depId", deptIds);
+        queryWrapper.in("deptId", deptIds);
           List<Student> studentList = this.list(queryWrapper);
           return studentList.stream().map(student -> {
               StudentVO studentVO = new StudentVO();
