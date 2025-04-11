@@ -27,7 +27,6 @@ import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -75,7 +74,6 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student>
         String userAccount = studentQueryRequest.getUserAccount();
         String sortOrder = studentQueryRequest.getSortOrder();
         String sortField = studentQueryRequest.getSortField();
-//        Long deptId = studentQueryRequest.getDeptId();
 
         // 模糊查询
         queryWrapper.like(StringUtils.isNotBlank(userName), "userName", userName);
@@ -90,19 +88,20 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student>
         queryWrapper.eq(ObjectUtils.isNotEmpty(gender), "gender", gender);
         queryWrapper.eq(ObjectUtils.isNotEmpty(status), "status", status);
 
+        // 转成 studentVO 来取deptId
+        StudentVO studentVO = new StudentVO();
+        BeanUtils.copyProperties(loginUser, studentVO);
+
         String userRole = loginUser.getUserRole();
-       long deptId = loginUser.getDeptId();
+        long deptId = studentVO.getDeptId();
 
         // 非管理员只能查询本部门的学生
         if (!UserRoleEnum.ADMIN.getValue().equals(userRole)) {
-            // 1. 查询所有部门
-            List<Department> allDepartments = departmentService.list();
-            // 2. 递归获取所有下级部门 ID
+            // 1. 获取所有下级部门 ID
             Set<Long> deptIds = departmentService.getAllChildDepartmentIds(deptId);
-//            collectSubDepartmentIds(loginUser.getDeptId(), allDepartments, deptIds);
-            // 3. 包含当前部门本身
+            // 2. 包含当前部门本身
             deptIds.add(deptId);
-            // 4. 添加条件
+            // 3. 添加条件
             queryWrapper.in("deptId", deptIds);
         }
 
@@ -128,14 +127,13 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student>
         // 3. 查询学生表
         QueryWrapper<Student> queryWrapper = new QueryWrapper<Student>();
         queryWrapper.in("deptId", deptIds);
-          List<Student> studentList = this.list(queryWrapper);
-          return studentList.stream().map(student -> {
-              StudentVO studentVO = new StudentVO();
-              BeanUtils.copyProperties(student, studentVO);
-              return studentVO;
-          }).collect(Collectors.toList());
+        List<Student> studentList = this.list(queryWrapper);
+        return studentList.stream().map(student -> {
+            StudentVO studentVO = new StudentVO();
+            BeanUtils.copyProperties(student, studentVO);
+            return studentVO;
+        }).collect(Collectors.toList());
     }
-
 
 
     /**
@@ -153,9 +151,9 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student>
 
         // 1. 关联查询部门信息
         long deptId = student.getDeptId();
-        if(deptId > 0){
+        if (deptId > 0) {
             Department dept = departmentService.getById(deptId);
-            if(dept !=null){
+            if (dept != null) {
                 studentVO.setDeptName(dept.getName());
             }
         }

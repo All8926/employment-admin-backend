@@ -37,6 +37,11 @@ public class EnterpriseEditRequest implements Serializable {
      */
     private String enterpriseName;
 
+    /**
+     * 职位
+     */
+    private String job;
+
 
 
     /**

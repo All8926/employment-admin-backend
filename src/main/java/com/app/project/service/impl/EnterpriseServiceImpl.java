@@ -8,16 +8,12 @@ import com.app.project.exception.BusinessException;
 import com.app.project.mapper.EnterpriseMapper;
 import com.app.project.model.dto.enterprise.EnterpriseAddRequest;
 import com.app.project.model.dto.enterprise.EnterpriseQueryRequest;
-import com.app.project.model.entity.Department;
-import com.app.project.model.entity.Enterprise;
 import com.app.project.model.entity.Enterprise;
 import com.app.project.model.enums.RegisterStatusEnum;
-import com.app.project.model.enums.UserRoleEnum;
 import com.app.project.model.vo.EnterpriseVO;
 import com.app.project.model.vo.UserVO;
 import com.app.project.service.DepartmentService;
 import com.app.project.service.EnterpriseService;
-
 import com.app.project.utils.SqlUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
@@ -30,8 +26,6 @@ import org.springframework.util.DigestUtils;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -75,6 +69,7 @@ public class EnterpriseServiceImpl extends ServiceImpl<EnterpriseMapper, Enterpr
         String userAccount = enterpriseQueryRequest.getUserAccount();
         String sortOrder = enterpriseQueryRequest.getSortOrder();
         String sortField = enterpriseQueryRequest.getSortField();
+          Integer isAuthorized = enterpriseQueryRequest.getIsAuthorized();
 
 
         // 模糊查询
@@ -88,6 +83,7 @@ public class EnterpriseServiceImpl extends ServiceImpl<EnterpriseMapper, Enterpr
         queryWrapper.eq(ObjectUtils.isNotEmpty(id), "id", id);
         queryWrapper.eq(ObjectUtils.isNotEmpty(gender), "gender", gender);
         queryWrapper.eq(ObjectUtils.isNotEmpty(status), "status", status);
+        queryWrapper.eq(ObjectUtils.isNotEmpty(isAuthorized), "isAuthorized", isAuthorized);
 
 
         // 排序规则

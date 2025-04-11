@@ -58,6 +58,11 @@ public class EnterpriseQueryRequest extends PageRequest implements Serializable 
      */
     private Integer status;
 
+    /**
+     * 是否认证
+     */
+    private Integer isAuthorized;
+
 
 
     private static final long serialVersionUID = 1L;

@@ -36,6 +36,11 @@ public class EnterpriseUpdateRequest implements Serializable {
      */
     private String enterpriseName;
 
+    /**
+     * 职位
+     */
+    private String job;
+
 
     /**
      * 手机号

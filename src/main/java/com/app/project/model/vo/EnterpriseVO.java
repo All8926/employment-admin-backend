@@ -1,7 +1,5 @@
 package com.app.project.model.vo;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
 /**
@@ -24,6 +22,14 @@ public class EnterpriseVO extends UserVO {
      */
     private Long enterpriseId;
 
+    /**
+     * 职位
+     */
+    private String job;
 
+    /**
+     * 是否认证
+     */
+    private Integer isAuthorized;
 
 }

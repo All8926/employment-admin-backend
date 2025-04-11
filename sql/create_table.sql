@@ -73,6 +73,8 @@ create table if not exists teacher
 
 -- 企业员工表
 use employment_admin;
+ALTER TABLE enterprise
+    ADD COLUMN isAuthorized TINYINT DEFAULT 0 COMMENT '是否认证 0未认证 1已认证';
 create table if not exists enterprise
 (
     id             bigint auto_increment comment 'id' primary key,

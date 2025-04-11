@@ -9,7 +9,6 @@ import com.app.project.exception.BusinessException;
 import com.app.project.manager.CosManager;
 import com.app.project.model.dto.file.UploadFileRequest;
 import com.app.project.model.enums.FileUploadBizEnum;
-import com.app.project.model.vo.LoginUserVO;
 import com.app.project.model.vo.UserVO;
 import com.app.project.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -58,6 +57,7 @@ public class FileController {
         if (fileUploadBizEnum == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
+        // 校验文件
         validFile(multipartFile, fileUploadBizEnum);
         UserVO loginUser = userService.getLoginUser(request);
         // 文件目录：根据业务、用户来划分
@@ -97,12 +97,12 @@ public class FileController {
         long fileSize = multipartFile.getSize();
         // 文件后缀
         String fileSuffix = FileUtil.getSuffix(multipartFile.getOriginalFilename());
-        final long ONE_M = 1024 * 1024L;
+        final long TEN_M = 10 * 1024 * 1024L;
         if (FileUploadBizEnum.USER_AVATAR.equals(fileUploadBizEnum)) {
-            if (fileSize > ONE_M) {
-                throw new BusinessException(ErrorCode.PARAMS_ERROR, "文件大小不能超过 1M");
+            if (fileSize > TEN_M) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "文件大小不能超过 10M");
             }
-            if (!Arrays.asList("jpeg", "jpg", "svg", "png", "webp").contains(fileSuffix)) {
+            if (!Arrays.asList("jpeg", "jpg", "svg", "png", "webp","pdf").contains(fileSuffix)) {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "文件类型错误");
             }
         }

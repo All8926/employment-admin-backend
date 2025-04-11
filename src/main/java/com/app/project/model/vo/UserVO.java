@@ -1,8 +1,9 @@
 package com.app.project.model.vo;
 
+import lombok.Data;
+
 import java.io.Serializable;
 import java.util.Date;
-import lombok.Data;
 
 /**
  * 用户视图（脱敏）
@@ -20,8 +21,8 @@ public class UserVO implements Serializable {
     private Integer gender;
     private String phone;
     private String email;
-    private Long deptId;
-    private String deptName;
+
+
     private Integer status;
     private String userProfile;
     private String userRole; // admin/student/teacher/enterprise

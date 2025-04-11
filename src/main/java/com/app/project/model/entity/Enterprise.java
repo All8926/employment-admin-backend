@@ -70,6 +70,11 @@ public class Enterprise implements Serializable {
     private Long enterpriseId;
 
     /**
+     * 是否认证
+     */
+    private Integer isAuthorized;
+
+    /**
      * 状态 0-待审核 1-已通过 2-已拒绝
      */
     private Integer status;
