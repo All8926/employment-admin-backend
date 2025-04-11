@@ -97,6 +97,22 @@ create table if not exists enterprise
     index idx_userAccount (userAccount)
 ) comment '企业员工' collate = utf8mb4_unicode_ci;
 
+-- 简历表
+use employment_admin;
+create table if not exists resume
+(
+    id             bigint auto_increment comment 'id' primary key,
+    filePath           varchar(256)                            null comment '简历路径',
+    fileName          varchar(256)                           null comment '简历名称',
+    userId   BIGINT                                 null comment '创建人',
+    remark     varchar(512)                           null comment '备注',
+    isActive       tinyint      default 0                 not null comment '生效状态 0否 1是',
+    createTime     datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
+    updateTime     datetime     default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    isDelete       tinyint      default 0                 not null comment '是否删除',
+    index idx_userId (userId)
+) comment '简历' collate = utf8mb4_unicode_ci;
+
 
 -- 用户表
 create table if not exists user

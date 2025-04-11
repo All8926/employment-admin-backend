@@ -60,7 +60,7 @@ public class DepartmentController {
 
     @ApiOperation("查询部门树")
     @GetMapping("/tree")
-    public  BaseResponse<List<DepartmentTreeVO>> deleteDepartment() {
+    public  BaseResponse<List<DepartmentTreeVO>> queryDepartment() {
           List<DepartmentTreeVO> departmentTree = departmentService.getDepartmentTree();
         return ResultUtils.success(departmentTree);
     }

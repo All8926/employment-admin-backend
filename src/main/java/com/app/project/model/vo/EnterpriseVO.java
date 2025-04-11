@@ -18,7 +18,7 @@ public class EnterpriseVO extends UserVO {
     private String enterpriseName;
 
     /**
-     * 所属企业ID（关联企业资质表）
+     * 所属企业ID（关联企业信息表）
      */
     private Long enterpriseId;
 
