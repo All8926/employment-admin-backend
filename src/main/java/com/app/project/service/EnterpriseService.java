@@ -4,7 +4,6 @@ package com.app.project.service;
 import com.app.project.model.dto.enterprise.EnterpriseAddRequest;
 import com.app.project.model.dto.enterprise.EnterpriseQueryRequest;
 import com.app.project.model.entity.Enterprise;
-import com.app.project.model.entity.Enterprise;
 import com.app.project.model.vo.EnterpriseVO;
 import com.app.project.model.vo.UserVO;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -12,7 +11,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
 
 /**
 * @author Administrator

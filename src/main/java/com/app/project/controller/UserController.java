@@ -1,23 +1,17 @@
 package com.app.project.controller;
 
-import com.app.project.annotation.AuthCheck;
 import com.app.project.common.BaseResponse;
-import com.app.project.common.DeleteRequest;
 import com.app.project.common.ErrorCode;
 import com.app.project.common.ResultUtils;
 import com.app.project.config.WxOpenConfig;
-import com.app.project.constant.UserConstant;
 import com.app.project.exception.BusinessException;
-import com.app.project.exception.ThrowUtils;
-import com.app.project.model.dto.user.*;
-import com.app.project.model.entity.User;
+import com.app.project.model.dto.user.UserLoginRequest;
 import com.app.project.model.vo.UserVO;
 import com.app.project.service.UserService;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
-import org.springframework.util.DigestUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,14 +19,13 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
-import static com.app.project.service.impl.UserServiceImpl.SALT;
-
 /**
  * 用户接口
  *
  * @author 
  * @from 
  */
+@Api(tags = "用户通用接口")
 @RestController
 @RequestMapping("/user")
 @Slf4j

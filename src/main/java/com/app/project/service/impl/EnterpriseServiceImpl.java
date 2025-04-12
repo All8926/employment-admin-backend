@@ -96,7 +96,7 @@ public class EnterpriseServiceImpl extends ServiceImpl<EnterpriseMapper, Enterpr
 
 
     /**
-     * 获取学生信息封装
+     * 获取企业信息封装
      *
      * @param enterprise
      * @param request
@@ -115,7 +115,7 @@ public class EnterpriseServiceImpl extends ServiceImpl<EnterpriseMapper, Enterpr
     }
 
     /**
-     * 分页获取学生信息封装
+     * 分页获取企业信息封装
      *
      * @param enterprisePage
      * @param request

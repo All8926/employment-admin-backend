@@ -15,7 +15,6 @@
             <result property="phone" column="phone" jdbcType="VARCHAR"/>
             <result property="email" column="email" jdbcType="VARCHAR"/>
             <result property="enterpriseName" column="enterpriseName" jdbcType="VARCHAR"/>
-            <result property="enterpriseId" column="enterpriseId" jdbcType="BIGINT"/>
             <result property="status" column="status" jdbcType="TINYINT"/>
             <result property="userProfile" column="userProfile" jdbcType="VARCHAR"/>
             <result property="userRole" column="userRole" jdbcType="VARCHAR"/>
@@ -23,14 +22,19 @@
             <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
             <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
             <result property="isAuthorized" column="isAuthorized" jdbcType="TINYINT"/>
+            <result property="licenseNum" column="licenseNum" jdbcType="VARCHAR"/>
+            <result property="address" column="address" jdbcType="VARCHAR"/>
+            <result property="businessScope" column="businessScope" jdbcType="VARCHAR"/>
+            <result property="industry" column="industry" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,userAccount,userPassword,isAuthorized,
+        id,userAccount,userPassword,
         userName,userAvatar,gender,
         job,phone,email,
-        enterpriseName,enterpriseId,status,
-        userProfile,userRole,createTime,
-        updateTime,isDelete
+        enterpriseName,status,userProfile,
+        userRole,createTime,updateTime,
+        isDelete,isAuthorized,licenseNum,
+        address,businessScope,industry
     </sql>
 </mapper>

@@ -10,8 +10,6 @@ import com.app.project.mapper.ResumeMapper;
 import com.app.project.model.dto.resume.ResumeAddRequest;
 import com.app.project.model.dto.resume.ResumeEditRequest;
 import com.app.project.model.dto.resume.ResumeQueryRequest;
-import com.app.project.model.entity.Department;
-import com.app.project.model.entity.Resume;
 import com.app.project.model.entity.Resume;
 import com.app.project.model.entity.Student;
 import com.app.project.model.enums.UserRoleEnum;
@@ -20,7 +18,6 @@ import com.app.project.model.vo.StudentVO;
 import com.app.project.model.vo.UserVO;
 import com.app.project.service.DepartmentService;
 import com.app.project.service.ResumeService;
-
 import com.app.project.service.StudentService;
 import com.app.project.utils.SqlUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -162,8 +159,6 @@ public class ResumeServiceImpl extends ServiceImpl<ResumeMapper, Resume>
                 queryWrapper.eq("userId", -1);
             }
         }
-
-
 
         // 排序规则
         queryWrapper.orderBy(SqlUtils.validSortField(sortField),

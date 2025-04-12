@@ -65,5 +65,33 @@ public class EnterpriseEditRequest implements Serializable {
     private String userProfile;
 
 
+    /**
+     * 姓名
+     */
+    private String userName;
+
+
+    /**
+     * 统一社会信用代码
+     */
+    private String licenseNum;
+
+    /**
+     * 办公地址
+     */
+    private String address;
+
+    /**
+     * 经营范围
+     */
+    private String businessScope;
+
+    /**
+     * 所属行业
+     */
+    private String industry;
+
+
+
     private static final long serialVersionUID = 1L;
 }

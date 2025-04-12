@@ -69,5 +69,31 @@ public class EnterpriseUpdateRequest implements Serializable {
      */
     private String userRole;
 
+    /**
+     * 是否认证 0未认证 1已认证
+     */
+    private Integer isAuthorized;
+
+    /**
+     * 统一社会信用代码
+     */
+    private String licenseNum;
+
+    /**
+     * 办公地址
+     */
+    private String address;
+
+    /**
+     * 经营范围
+     */
+    private String businessScope;
+
+    /**
+     * 所属行业
+     */
+    private String industry;
+
+
     private static final long serialVersionUID = 1L;
 }

@@ -65,16 +65,6 @@ public class Enterprise implements Serializable {
     private String enterpriseName;
 
     /**
-     * 所属企业ID（关联企业资质表）
-     */
-    private Long enterpriseId;
-
-    /**
-     * 是否认证
-     */
-    private Integer isAuthorized;
-
-    /**
      * 状态 0-待审核 1-已通过 2-已拒绝
      */
     private Integer status;
@@ -88,6 +78,31 @@ public class Enterprise implements Serializable {
      * 用户角色：admin/student/teacher/enterprise
      */
     private String userRole;
+
+    /**
+     * 是否认证 0未认证 1已认证
+     */
+    private Integer isAuthorized;
+
+    /**
+     * 统一社会信用代码
+     */
+    private String licenseNum;
+
+    /**
+     * 办公地址
+     */
+    private String address;
+
+    /**
+     * 经营范围
+     */
+    private String businessScope;
+
+    /**
+     * 所属行业
+     */
+    private String industry;
 
     /**
      * 创建时间
@@ -104,6 +119,8 @@ public class Enterprise implements Serializable {
      */
     @TableLogic
     private Integer isDelete;
+
+
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

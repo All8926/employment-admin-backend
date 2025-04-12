@@ -11,9 +11,7 @@ import com.app.project.exception.ThrowUtils;
 import com.app.project.model.dto.resume.ResumeAddRequest;
 import com.app.project.model.dto.resume.ResumeEditRequest;
 import com.app.project.model.dto.resume.ResumeQueryRequest;
-import com.app.project.model.dto.student.StudentQueryRequest;
 import com.app.project.model.entity.Resume;
-import com.app.project.model.entity.Student;
 import com.app.project.model.vo.ResumeVO;
 import com.app.project.model.vo.UserVO;
 import com.app.project.service.ResumeService;
@@ -22,12 +20,14 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.util.List;
 
 @RestController
 @RequestMapping("/resume")
@@ -71,6 +71,7 @@ public class ResumeController {
 
     @ApiOperation("分页查询简历")
     @PostMapping("/list/page")
+    @AuthCheck(mustRoles = {UserConstant.ADMIN_ROLE, UserConstant.TEACHER_ROLE, UserConstant.STUDENT_ROLE})
     public  BaseResponse<Page<ResumeVO>> listResumeByPage(@RequestBody ResumeQueryRequest resumeQueryRequest,
                                                           HttpServletRequest request) {
         long current = resumeQueryRequest.getCurrent();

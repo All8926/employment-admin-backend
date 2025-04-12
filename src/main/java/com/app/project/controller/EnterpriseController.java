@@ -33,12 +33,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 /**
- * 企业员工信息接口
+ * 企业信息接口
  *
  * @author
  * @from
  */
-@Api(tags = "企业员工管理")
+@Api(tags = "企业信息管理")
 @RestController
 @RequestMapping("/enterprise")
 @Slf4j
@@ -53,14 +53,14 @@ public class EnterpriseController {
     // region 增删改查
 
     /**
-     * 注册企业员工信息
+     * 注册企业信息
      *
      * @param enterpriseAddRequest
      * @param request
      * @return
      */
     @PostMapping("/register")
-    @ApiOperation(value = "注册企业员工信息")
+    @ApiOperation(value = "注册企业信息")
     public BaseResponse<Boolean> addEnterprise(@Valid @RequestBody EnterpriseAddRequest enterpriseAddRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(enterpriseAddRequest == null, ErrorCode.PARAMS_ERROR);
 
@@ -71,7 +71,7 @@ public class EnterpriseController {
     }
 
     /**
-     * 删除企业员工信息
+     * 删除企业信息
      *
      * @param deleteRequest
      * @param request
@@ -95,13 +95,13 @@ public class EnterpriseController {
     }
 
     /**
-     * 更新企业员工信息（仅管理员可用）
+     * 更新企业信息
      *
      * @param enterpriseUpdateRequest
      * @return
      */
     @PostMapping("/update")
-    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRoles = {UserConstant.ADMIN_ROLE, UserConstant.TEACHER_ROLE})
     public BaseResponse<Boolean> updateEnterprise(@RequestBody EnterpriseUpdateRequest enterpriseUpdateRequest) {
         if (enterpriseUpdateRequest == null || enterpriseUpdateRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
@@ -123,13 +123,13 @@ public class EnterpriseController {
  
 
     /**
-     * 分页获取企业员工信息列表（封装类）
+     * 分页获取企业信息列表（封装类）
      *
      * @param enterpriseQueryRequest
      * @param request
      * @return
      */
-    @ApiOperation(value = "分页获取企业员工信息列表（封装类）")
+    @ApiOperation(value = "分页获取企业信息列表（封装类）")
     @PostMapping("/list/page/vo")
     @AuthCheck(mustRoles = {UserConstant.ADMIN_ROLE, UserConstant.TEACHER_ROLE})
     public BaseResponse<Page<EnterpriseVO>> listEnterpriseVOByPage(@RequestBody EnterpriseQueryRequest enterpriseQueryRequest,
@@ -151,7 +151,7 @@ public class EnterpriseController {
 
 
     /**
-     * 编辑企业员工信息（给用户使用）
+     * 编辑企业信息（给用户使用）
      *
      * @param enterpriseEditRequest
      * @param request

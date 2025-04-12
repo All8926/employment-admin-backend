@@ -17,10 +17,6 @@ public class EnterpriseVO extends UserVO {
      */
     private String enterpriseName;
 
-    /**
-     * 所属企业ID（关联企业信息表）
-     */
-    private Long enterpriseId;
 
     /**
      * 职位
@@ -31,5 +27,25 @@ public class EnterpriseVO extends UserVO {
      * 是否认证
      */
     private Integer isAuthorized;
+
+    /**
+     * 统一社会信用代码
+     */
+    private String licenseNum;
+
+    /**
+     * 办公地址
+     */
+    private String address;
+
+    /**
+     * 经营范围
+     */
+    private String businessScope;
+
+    /**
+     * 所属行业
+     */
+    private String industry;
 
 }

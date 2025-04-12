@@ -71,10 +71,16 @@ create table if not exists teacher
 ) comment '教师' collate = utf8mb4_unicode_ci;
 
 
--- 企业员工表
+-- 企业信息表
 use employment_admin;
 ALTER TABLE enterprise
-    ADD COLUMN isAuthorized TINYINT DEFAULT 0 COMMENT '是否认证 0未认证 1已认证';
+    ADD COLUMN licenseNum varchar(128) null COMMENT '统一社会信用代码',
+    ADD COLUMN address varchar(256) null COMMENT '办公地址',
+    ADD  COLUMN businessScope varchar(512) null COMMENT '经营范围',
+    ADD  COLUMN  industry varchar(256) null COMMENT '所属行业';
+ALTER TABLE  enterprise DROP COLUMN enterpriseId;
+
+
 create table if not exists enterprise
 (
     id             bigint auto_increment comment 'id' primary key,
@@ -87,10 +93,10 @@ create table if not exists enterprise
     phone          varchar(11)                            null comment '手机号',
     email          varchar(256)                           null comment '邮箱',
     enterpriseName varchar(256)                           null comment '企业名称',
-    enterpriseId   BIGINT                                 null comment '所属企业ID（关联企业资质表）',
+    isAuthorized   TINYINT      DEFAULT 0 COMMENT '是否认证 0未认证 1已认证',
     status         tinyint      default 0 comment '状态 0-待审核 1-已通过 2-已拒绝',
     userProfile    varchar(512)                           null comment '用户简介',
-    userRole       varchar(256) default 'enterprise'         not null comment '用户角色：admin/student/teacher/enterprise',
+    userRole       varchar(256) default 'enterprise'      not null comment '用户角色：admin/student/teacher/enterprise',
     createTime     datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
     updateTime     datetime     default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
     isDelete       tinyint      default 0                 not null comment '是否删除',
@@ -101,17 +107,35 @@ create table if not exists enterprise
 use employment_admin;
 create table if not exists resume
 (
-    id             bigint auto_increment comment 'id' primary key,
-    filePath           varchar(256)                            null comment '简历路径',
-    fileName          varchar(256)                           null comment '简历名称',
-    userId   BIGINT                                 null comment '创建人',
-    remark     varchar(512)                           null comment '备注',
-    isActive       tinyint      default 0                 not null comment '生效状态 0否 1是',
-    createTime     datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
-    updateTime     datetime     default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
-    isDelete       tinyint      default 0                 not null comment '是否删除',
+    id         bigint auto_increment comment 'id' primary key,
+    filePath   varchar(256)                       null comment '简历路径',
+    fileName   varchar(256)                       null comment '简历名称',
+    userId     BIGINT                             null comment '创建人',
+    remark     varchar(512)                       null comment '备注',
+    isActive   tinyint  default 0                 not null comment '生效状态 0否 1是',
+    createTime datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    updateTime datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    isDelete   tinyint  default 0                 not null comment '是否删除',
     index idx_userId (userId)
 ) comment '简历' collate = utf8mb4_unicode_ci;
+
+
+
+-- 企业资质表
+use employment_admin;
+create table if not exists enterprise_certification
+(
+    id         bigint auto_increment comment 'id' primary key,
+    filePath   varchar(256)                       null comment '路径',
+    fileName   varchar(256)                       null comment '名称',
+    userId     BIGINT                             null comment '创建人',
+    remark     varchar(512)                       null comment '备注',
+    certType  varchar(128)                   null comment '资质类型',
+    createTime datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    updateTime datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    isDelete   tinyint  default 0                 not null comment '是否删除',
+    index idx_userId (userId)
+) comment '企业资质' collate = utf8mb4_unicode_ci;
 
 
 -- 用户表
