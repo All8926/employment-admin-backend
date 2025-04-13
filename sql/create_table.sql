@@ -73,14 +73,6 @@ create table if not exists teacher
 
 -- 企业信息表
 use employment_admin;
-ALTER TABLE enterprise
-    ADD COLUMN licenseNum varchar(128) null COMMENT '统一社会信用代码',
-    ADD COLUMN address varchar(256) null COMMENT '办公地址',
-    ADD  COLUMN businessScope varchar(512) null COMMENT '经营范围',
-    ADD  COLUMN  industry varchar(256) null COMMENT '所属行业';
-ALTER TABLE  enterprise DROP COLUMN enterpriseId;
-
-
 create table if not exists enterprise
 (
     id             bigint auto_increment comment 'id' primary key,
@@ -93,6 +85,10 @@ create table if not exists enterprise
     phone          varchar(11)                            null comment '手机号',
     email          varchar(256)                           null comment '邮箱',
     enterpriseName varchar(256)                           null comment '企业名称',
+    licenseNum     varchar(128)                           null COMMENT '统一社会信用代码',
+    address        varchar(256)                           null COMMENT '办公地址',
+    businessScope  varchar(512)                           null COMMENT '经营范围',
+    industry       varchar(256)                           null COMMENT '所属行业',
     isAuthorized   TINYINT      DEFAULT 0 COMMENT '是否认证 0未认证 1已认证',
     status         tinyint      default 0 comment '状态 0-待审核 1-已通过 2-已拒绝',
     userProfile    varchar(512)                           null comment '用户简介',
@@ -108,9 +104,9 @@ use employment_admin;
 create table if not exists resume
 (
     id         bigint auto_increment comment 'id' primary key,
-    filePath   varchar(256)                       null comment '简历路径',
+    filePath   varchar(256)                       not null comment '简历路径',
     fileName   varchar(256)                       null comment '简历名称',
-    userId     BIGINT                             null comment '创建人',
+    userId     BIGINT                             not null comment '创建人',
     remark     varchar(512)                       null comment '备注',
     isActive   tinyint  default 0                 not null comment '生效状态 0否 1是',
     createTime datetime default CURRENT_TIMESTAMP not null comment '创建时间',
@@ -120,22 +116,56 @@ create table if not exists resume
 ) comment '简历' collate = utf8mb4_unicode_ci;
 
 
-
 -- 企业资质表
 use employment_admin;
+ALTER TABLE enterprise_certification
+    ADD COLUMN status TINYINT DEFAULT 0 COMMENT '状态 0-待审核 1-已通过 2-已拒绝' AFTER remark,
+    ADD COLUMN rejectReason VARCHAR(256) NULL COMMENT '拒绝原因';
 create table if not exists enterprise_certification
 (
     id         bigint auto_increment comment 'id' primary key,
-    filePath   varchar(256)                       null comment '路径',
+    filePath   varchar(256)                       not null comment '路径',
     fileName   varchar(256)                       null comment '名称',
-    userId     BIGINT                             null comment '创建人',
+    userId     BIGINT                             not null comment '创建人',
     remark     varchar(512)                       null comment '备注',
-    certType  varchar(128)                   null comment '资质类型',
+    certType   varchar(128)                       null comment '资质类型',
     createTime datetime default CURRENT_TIMESTAMP not null comment '创建时间',
     updateTime datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
     isDelete   tinyint  default 0                 not null comment '是否删除',
     index idx_userId (userId)
 ) comment '企业资质' collate = utf8mb4_unicode_ci;
+
+
+-- 合同表
+use employment_admin;
+ALTER TABLE contract
+    ADD COLUMN status       TINYINT default 0 not null comment '合同状态 0-待学生同意 1-待老师同意 2-已完成 3-学生拒绝 4-老师拒绝',
+    ADD COLUMN rejectReason varchar(256)      null comment '拒绝原因';
+ALTER TABLE contract
+    ADD COLUMN enterpriseName varchar(256)                       null comment '企业名称',
+    ADD COLUMN studentName  varchar(256)                       null comment '学生姓名',
+    ADD COLUMN teacherName  varchar(256)                       null comment '教师姓名';
+
+create table if not exists contract
+(
+    id           bigint auto_increment comment 'id' primary key,
+    filePath     varchar(256)                       null comment '路径',
+    fileName     varchar(256)                       null comment '名称',
+    enterpriseId BIGINT                             not null comment '企业id(创建人)',
+    enterpriseName varchar(256)                       null comment '企业名称',
+    studentId    BIGINT                             not null comment '学生id',
+    studentName  varchar(256)                       null comment '学生姓名',
+    teacherId    BIGINT                             null comment '教师id(审核人)',
+    teacherName  varchar(256)                       null comment '教师姓名',
+    remark       varchar(512)                       null comment '备注',
+    signDate     datetime                           null comment '签约日期',
+    status       TINYINT  default 0                 not null comment '合同状态 0-待学生同意 1-待老师同意 2-已完成 3-学生拒绝 4-老师拒绝',
+    rejectReason varchar(256)                       null comment '拒绝原因',
+    createTime   datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    updateTime   datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    isDelete     tinyint  default 0                 not null comment '是否删除',
+    index idx_enterpriseId (enterpriseId)
+) comment '合同' collate = utf8mb4_unicode_ci;
 
 
 -- 用户表

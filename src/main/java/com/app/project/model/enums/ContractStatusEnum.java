@@ -7,24 +7,24 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * 文件上传业务类型枚举
+ * 合同状态枚举
  *
  * @author 
  * @from 
  */
-public enum FileUploadBizEnum {
+public enum ContractStatusEnum {
 
-    USER_AVATAR("用户头像", "user_avatar"),
-    USER_RESUME("用户简历", "user_resume"),
-    ENTERPRISE_CERTIFICATE("企业资质", "enterprise_certificate"),
-    CONTRACT_FILE("合同文件", "contract_file");
-
+    STUDENT_PENDING("待学生审核", 0),
+    TEACHER_PENDING("待老师审核", 1),
+    RESOLVED("已完成", 2),
+    STUDENT_REJECTED("学生拒绝", 3),
+    TEACHER_REJECTED("老师拒绝", 4);
 
     private final String text;
 
-    private final String value;
+    private final Integer value;
 
-    FileUploadBizEnum(String text, String value) {
+    ContractStatusEnum(String text, Integer value) {
         this.text = text;
         this.value = value;
     }
@@ -34,7 +34,7 @@ public enum FileUploadBizEnum {
      *
      * @return
      */
-    public static List<String> getValues() {
+    public static List<Integer> getValues() {
         return Arrays.stream(values()).map(item -> item.value).collect(Collectors.toList());
     }
 
@@ -44,11 +44,11 @@ public enum FileUploadBizEnum {
      * @param value
      * @return
      */
-    public static FileUploadBizEnum getEnumByValue(String value) {
+    public static ContractStatusEnum getEnumByValue(String value) {
         if (ObjectUtils.isEmpty(value)) {
             return null;
         }
-        for (FileUploadBizEnum anEnum : FileUploadBizEnum.values()) {
+        for (ContractStatusEnum anEnum : ContractStatusEnum.values()) {
             if (anEnum.value.equals(value)) {
                 return anEnum;
             }
@@ -56,7 +56,7 @@ public enum FileUploadBizEnum {
         return null;
     }
 
-    public String getValue() {
+    public Integer getValue() {
         return value;
     }
 

@@ -2,10 +2,7 @@ package com.app.project.controller;
 
 
 import com.app.project.annotation.AuthCheck;
-import com.app.project.common.BaseResponse;
-import com.app.project.common.DeleteRequest;
-import com.app.project.common.ErrorCode;
-import com.app.project.common.ResultUtils;
+import com.app.project.common.*;
 import com.app.project.constant.UserConstant;
 import com.app.project.exception.ThrowUtils;
 import com.app.project.model.dto.enterpriseCertification.EnterpriseCertificationAddRequest;
@@ -87,5 +84,14 @@ public class EnterpriseCertificationController {
         Page<EnterpriseCertification> enterpriseCertificationPage = enterpriseCertificationService.page(new Page<>(current, size),queryWrapper);
         // 获取封装类
         return ResultUtils.success(enterpriseCertificationService.getEnterpriseCertificationVOPage(enterpriseCertificationPage, request));
+    }
+
+    @AuthCheck(mustRoles = {UserConstant.ADMIN_ROLE, UserConstant.TEACHER_ROLE})
+    @ApiOperation("审核资质")
+    @PostMapping("/audit")
+    public BaseResponse<Boolean> auditContract(@RequestBody AuditRequest auditRequest, HttpServletRequest request) {
+        UserVO loginUser = userService.getLoginUser(request);
+        boolean result = enterpriseCertificationService.auditEnterpriseCertification(auditRequest, loginUser);
+        return ResultUtils.success(result);
     }
 }

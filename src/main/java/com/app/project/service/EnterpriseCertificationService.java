@@ -1,6 +1,7 @@
 package com.app.project.service;
 
 
+import com.app.project.common.AuditRequest;
 import com.app.project.common.DeleteRequest;
 import com.app.project.model.dto.enterpriseCertification.EnterpriseCertificationAddRequest;
 import com.app.project.model.dto.enterpriseCertification.EnterpriseCertificationEditRequest;
@@ -62,4 +63,12 @@ public interface EnterpriseCertificationService extends IService<EnterpriseCerti
      * @return
      */
     Page<EnterpriseCertificationVO> getEnterpriseCertificationVOPage(Page<EnterpriseCertification> enterpriseCertificationPage, HttpServletRequest request);
+
+    /**
+     * 审核企业资质
+     * @param enterpriseCertificationAuditRequest
+     * @param loginUser
+     * @return
+     */
+    boolean auditEnterpriseCertification(AuditRequest auditRequest, UserVO loginUser);
 }

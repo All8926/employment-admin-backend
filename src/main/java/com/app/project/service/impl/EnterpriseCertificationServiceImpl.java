@@ -2,6 +2,7 @@ package com.app.project.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import com.alibaba.excel.util.StringUtils;
+import com.app.project.common.AuditRequest;
 import com.app.project.common.DeleteRequest;
 import com.app.project.common.ErrorCode;
 import com.app.project.constant.CommonConstant;
@@ -25,6 +26,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -103,6 +105,7 @@ public class EnterpriseCertificationServiceImpl extends ServiceImpl<EnterpriseCe
         String fileName = enterpriseCertificationQueryRequest.getFileName();
         String remark = enterpriseCertificationQueryRequest.getRemark();
         String certType = enterpriseCertificationQueryRequest.getCertType();
+        Integer status = enterpriseCertificationQueryRequest.getStatus();
         String sortOrder = enterpriseCertificationQueryRequest.getSortOrder();
         String sortField = enterpriseCertificationQueryRequest.getSortField();
 
@@ -113,6 +116,7 @@ public class EnterpriseCertificationServiceImpl extends ServiceImpl<EnterpriseCe
 
         // 精确查询
         queryWrapper.eq(ObjectUtils.isNotEmpty(id), "id", id);
+        queryWrapper.eq(ObjectUtils.isNotEmpty(status), "status", status);
 
         String userRole = loginUser.getUserRole();
         long userId = loginUser.getId();
@@ -159,6 +163,41 @@ public class EnterpriseCertificationServiceImpl extends ServiceImpl<EnterpriseCe
 
         enterpriseCertificationVOPage.setRecords(enterpriseCertificationVOList);
         return enterpriseCertificationVOPage;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean auditEnterpriseCertification(AuditRequest auditRequest, UserVO loginUser) {
+        ThrowUtils.throwIf(loginUser == null, ErrorCode.NOT_LOGIN_ERROR);
+        int requestStatus = auditRequest.getStatus();
+        ThrowUtils.throwIf(requestStatus != 0 && requestStatus != 1, ErrorCode.PARAMS_ERROR);
+        // 查询资质
+        EnterpriseCertification enterpriseCertification = this.getById(auditRequest.getId());
+        ThrowUtils.throwIf(enterpriseCertification == null, ErrorCode.NOT_FOUND_ERROR, "资质不存在");
+
+        // 拒绝的话需要填写拒绝原因
+        String rejectReason = auditRequest.getRejectReason();
+        ThrowUtils.throwIf(requestStatus == 0 && StringUtils.isBlank(rejectReason), ErrorCode.PARAMS_ERROR, "拒绝原因不能为空");
+        //拒绝
+        if(requestStatus == 0){
+            enterpriseCertification.setStatus(2);
+            enterpriseCertification.setRejectReason(rejectReason);
+        }
+        // 通过
+        if(requestStatus == 1){
+            enterpriseCertification.setStatus(1);
+
+            // 企业未认证的话只要资质通过就设置为已认证
+            Enterprise enterprise = enterpriseService.getById(enterpriseCertification.getUserId());
+            int isAuthorized = enterprise.getIsAuthorized();
+            if(isAuthorized == 0){
+                enterprise.setIsAuthorized(1);
+                enterpriseService.updateById(enterprise);
+            }
+        }
+        boolean result = this.updateById(enterpriseCertification);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        return true;
     }
 }
 

@@ -1,26 +1,26 @@
-package com.app.project.model.dto.enterpriseCertification;
+package com.app.project.model.dto.contract;
 
 import com.app.project.common.PageRequest;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
- * 查询简历信息请求
+ * 查询合同信息请求
  *
  * @author
  * @from
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class EnterpriseCertificationQueryRequest extends PageRequest implements Serializable {
+public class ContractQueryRequest extends PageRequest implements Serializable {
 
     /**
      * id
      */
     private Long id;
-
 
 
     /**
@@ -29,15 +29,24 @@ public class EnterpriseCertificationQueryRequest extends PageRequest implements 
     private String fileName;
 
     /**
-     * 备注
+     * 企业名称
      */
-    private String remark;
-
+    private String enterpriseName;
 
     /**
-     * 资质类型
+     * 学生姓名
      */
-    private String certType;
+    private String studentName;
+
+    /**
+     * 教师姓名
+     */
+    private String teacherName;
+
+    /**
+     * 签约日期
+     */
+    private Date signDate;
 
     /**
      * 状态

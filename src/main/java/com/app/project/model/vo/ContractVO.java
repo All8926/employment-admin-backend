@@ -13,7 +13,7 @@ import java.util.Date;
  * @from
  */
 @Data
-public class EnterpriseCertificationVO implements Serializable {
+public class ContractVO implements Serializable {
 
     /**
      * id
@@ -31,14 +31,34 @@ public class EnterpriseCertificationVO implements Serializable {
     private String fileName;
 
     /**
-     * 创建人
+     * 企业id(创建人)
      */
-    private Long userId;
+    private Long enterpriseId;
 
     /**
-     * 企业信息
+     * 企业名称
      */
-    private EnterpriseVO enterprise;
+    private String enterpriseName;
+
+    /**
+     * 学生id
+     */
+    private Long studentId;
+
+    /**
+     * 学生姓名
+     */
+    private String studentName;
+
+    /**
+     * 教师id(审核人)
+     */
+    private Long teacherId;
+
+    /**
+     * 教师姓名
+     */
+    private String teacherName;
 
     /**
      * 备注
@@ -46,9 +66,9 @@ public class EnterpriseCertificationVO implements Serializable {
     private String remark;
 
     /**
-     * 资质类型
+     * 签约日期
      */
-    private String certType;
+    private Date signDate;
 
     /**
      * 状态

@@ -7,12 +7,13 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 企业资质
- * @TableName enterprise_certification
+ * 合同
+ *
+ * @TableName contract
  */
-@TableName(value ="enterprise_certification")
+@TableName(value = "contract")
 @Data
-public class EnterpriseCertification implements Serializable {
+public class Contract implements Serializable {
     /**
      * id
      */
@@ -30,9 +31,34 @@ public class EnterpriseCertification implements Serializable {
     private String fileName;
 
     /**
-     * 创建人
+     * 企业id(创建人)
      */
-    private Long userId;
+    private Long enterpriseId;
+
+    /**
+     * 企业名称
+     */
+    private String enterpriseName;
+
+    /**
+     * 学生id
+     */
+    private Long studentId;
+
+    /**
+     * 学生姓名
+     */
+    private String studentName;
+
+    /**
+     * 教师id(审核人)
+     */
+    private Long teacherId;
+
+    /**
+     * 教师姓名
+     */
+    private String teacherName;
 
     /**
      * 备注
@@ -40,9 +66,9 @@ public class EnterpriseCertification implements Serializable {
     private String remark;
 
     /**
-     * 资质类型
+     * 签约日期
      */
-    private String certType;
+    private Date signDate;
 
     /**
      * 状态
