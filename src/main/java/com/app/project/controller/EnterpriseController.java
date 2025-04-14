@@ -100,6 +100,7 @@ public class EnterpriseController {
      * @param enterpriseUpdateRequest
      * @return
      */
+    @ApiOperation(value = "更新企业信息(管理员使用)")
     @PostMapping("/update")
     @AuthCheck(mustRoles = {UserConstant.ADMIN_ROLE, UserConstant.TEACHER_ROLE})
     public BaseResponse<Boolean> updateEnterprise(@RequestBody EnterpriseUpdateRequest enterpriseUpdateRequest) {
@@ -129,7 +130,7 @@ public class EnterpriseController {
      * @param request
      * @return
      */
-    @ApiOperation(value = "分页获取企业信息列表（封装类）")
+    @ApiOperation(value = "分页获取企业信息列表")
     @PostMapping("/list/page/vo")
     @AuthCheck(mustRoles = {UserConstant.ADMIN_ROLE, UserConstant.TEACHER_ROLE})
     public BaseResponse<Page<EnterpriseVO>> listEnterpriseVOByPage(@RequestBody EnterpriseQueryRequest enterpriseQueryRequest,
@@ -157,6 +158,7 @@ public class EnterpriseController {
      * @param request
      * @return
      */
+    @ApiOperation(value = "编辑企业信息(用户使用)")
     @PostMapping("/edit")
     public BaseResponse<Boolean> editEnterprise(@RequestBody EnterpriseEditRequest enterpriseEditRequest, HttpServletRequest request) {
         if (enterpriseEditRequest == null || enterpriseEditRequest.getId() <= 0) {

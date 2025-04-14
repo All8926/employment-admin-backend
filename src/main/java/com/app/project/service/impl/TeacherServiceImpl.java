@@ -5,22 +5,15 @@ import com.alibaba.excel.util.StringUtils;
 import com.app.project.common.ErrorCode;
 import com.app.project.constant.CommonConstant;
 import com.app.project.exception.BusinessException;
-import com.app.project.exception.ThrowUtils;
 import com.app.project.mapper.TeacherMapper;
 import com.app.project.model.dto.teacher.TeacherAddRequest;
 import com.app.project.model.dto.teacher.TeacherQueryRequest;
 import com.app.project.model.entity.Department;
 import com.app.project.model.entity.Teacher;
-import com.app.project.model.entity.Teacher;
-import com.app.project.model.entity.User;
+import com.app.project.model.enums.RegisterStatusEnum;
 import com.app.project.model.vo.TeacherVO;
-import com.app.project.model.vo.TeacherVO;
-import com.app.project.model.vo.UserVO;
 import com.app.project.service.DepartmentService;
-import com.app.project.service.StudentService;
 import com.app.project.service.TeacherService;
-
-import com.app.project.service.UserService;
 import com.app.project.utils.SqlUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
@@ -32,7 +25,9 @@ import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -44,8 +39,6 @@ import java.util.stream.Collectors;
 public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher>
     implements TeacherService {
 
-//    @Resource
-//    private UserService userService;
 
     @Resource
     private DepartmentService departmentService;
@@ -55,34 +48,34 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher>
      */
     public static final String SALT = "xxx";
 
-    /**
-     * 校验数据
-     *
-     * @param teacher
-     * @param add      对创建的数据进行校验
-     */
-    @Override
-    public void validTeacher(Teacher teacher, boolean add) {
-    
-    }
 
     @Override
-    public Boolean addTeacher(TeacherAddRequest teacherAddRequest) {
-        String userAccount = teacherAddRequest.getUserAccount();
-        String userPassword = teacherAddRequest.getUserPassword();
+    public Boolean registerTeacher(TeacherAddRequest teacherAddRequest) {
+        Teacher teacher = new Teacher();
+        BeanUtils.copyProperties(teacherAddRequest, teacher);
+        String userAccount = teacher.getUserAccount();
+
+        // 单机锁，账号不能重复
         synchronized (userAccount.intern()) {
-            // 账户不能重复
-            QueryWrapper<Teacher> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("userAccount", userAccount);
-            long count = this.baseMapper.selectCount(queryWrapper);
-            if (count > 0) {
-                throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号重复");
+            // 1. 校验账号是否存在
+            QueryWrapper<Teacher> teacherQueryWrapper = new QueryWrapper<>();
+            teacherQueryWrapper.eq("userAccount", userAccount);
+            Teacher teacherOne = this.getOne(teacherQueryWrapper);
+
+            // 2. 存在 -> 校验账号状态
+            if (teacherOne != null) {
+                int studentOneStatus = teacherOne.getStatus();
+                if (studentOneStatus == RegisterStatusEnum.REJECTED.getValue()) {
+                    throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号已被拒绝");
+                }
+                if (studentOneStatus == RegisterStatusEnum.PENDING.getValue()) {
+                    throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号正在审核中");
+                }
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号已存在");
             }
-            // 2. 加密
-            String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
-            // 3. 插入数据
-            Teacher teacher = new Teacher();
-            BeanUtils.copyProperties(teacherAddRequest, teacher);
+
+            // 3.加密
+            String encryptPassword = DigestUtils.md5DigestAsHex((SALT + teacher.getUserPassword()).getBytes());
             teacher.setUserPassword(encryptPassword);
             boolean saveResult = this.save(teacher);
             if (!saveResult) {
@@ -91,7 +84,6 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher>
             return true;
         }
     }
-
     /**
      * 获取查询条件
      *
@@ -115,7 +107,7 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher>
         String userAccount = teacherQueryRequest.getUserAccount();
         String sortOrder = teacherQueryRequest.getSortOrder();
         String sortField = teacherQueryRequest.getSortField();
-        Long deptId = teacherQueryRequest.getDeptId();
+//        Long deptId = teacherQueryRequest.getDeptId();
 
         // 模糊查询
         queryWrapper.like(StringUtils.isNotBlank(userName), "userName", userName);
@@ -126,9 +118,12 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher>
 
         // 精确查询
         queryWrapper.eq(ObjectUtils.isNotEmpty(id), "id", id);
-        queryWrapper.eq(ObjectUtils.isNotEmpty(deptId), "deptId", deptId);
+//        queryWrapper.eq(ObjectUtils.isNotEmpty(deptId), "deptId", deptId);
         queryWrapper.eq(ObjectUtils.isNotEmpty(gender), "gender", gender);
         queryWrapper.eq(ObjectUtils.isNotEmpty(status), "status", status);
+
+        // 排除超级管理员
+        queryWrapper.ne("userAccount", "admin");
 
         // 排序规则
         queryWrapper.orderBy(SqlUtils.validSortField(sortField),
@@ -137,47 +132,6 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher>
         return queryWrapper;
     }
 
-    /**
-     * 获取教师信息封装
-     *
-     * @param teacher
-     * @param request
-     * @return
-     */
-    @Override
-    public TeacherVO getTeacherVO(Teacher teacher, HttpServletRequest request) {
-        // 对象转封装类
-        TeacherVO teacherVO = new TeacherVO();
-        BeanUtils.copyProperties(teacher, teacherVO);
-
-        // 1. 关联查询部门信息
-        long deptId = teacher.getDeptId();
-        if(deptId > 0){
-            Department dept = departmentService.getById(deptId);
-            if(dept !=null){
-                teacherVO.setDeptName(dept.getName());
-            }
-        }
-
-        // endregion
-
-        return teacherVO;
-    }
-
-    /**
-     * 递归获取所有下级部门 ID
-     * @param parentId
-     * @param allDepartments
-     * @param result
-     */
-    private void collectSubDepartmentIds(Long parentId, List<Department> allDepartments, Set<Long> result) {
-        for (Department dept : allDepartments) {
-            if (parentId.equals(dept.getParentId())) {
-                result.add(dept.getId());
-                collectSubDepartmentIds(dept.getId(), allDepartments, result); // 递归找下级
-            }
-        }
-    }
 
     /**
      * 分页获取教师信息封装

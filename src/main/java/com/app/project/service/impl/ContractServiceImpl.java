@@ -12,17 +12,17 @@ import com.app.project.mapper.ContractMapper;
 import com.app.project.model.dto.contract.ContractAddRequest;
 import com.app.project.model.dto.contract.ContractEditRequest;
 import com.app.project.model.dto.contract.ContractQueryRequest;
+import com.app.project.model.entity.AuditLog;
 import com.app.project.model.entity.Contract;
 import com.app.project.model.entity.Enterprise;
 import com.app.project.model.entity.Student;
+import com.app.project.model.enums.AuditResultEnum;
+import com.app.project.model.enums.AuditTargetTypeEnum;
 import com.app.project.model.enums.ContractStatusEnum;
 import com.app.project.model.enums.UserRoleEnum;
 import com.app.project.model.vo.ContractVO;
 import com.app.project.model.vo.UserVO;
-import com.app.project.service.ContractService;
-import com.app.project.service.DepartmentService;
-import com.app.project.service.EnterpriseService;
-import com.app.project.service.StudentService;
+import com.app.project.service.*;
 import com.app.project.utils.SqlUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
@@ -30,6 +30,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -39,22 +40,22 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
-* @author Administrator
-* @description 针对表【contract(合同)】的数据库操作Service实现
-* @createDate 2025-04-12 20:34:09
-*/
+ * @author Administrator
+ * @description 针对表【contract(合同)】的数据库操作Service实现
+ * @createDate 2025-04-12 20:34:09
+ */
 @Service
 public class ContractServiceImpl extends ServiceImpl<ContractMapper, Contract>
-    implements ContractService {
+        implements ContractService {
 
     @Resource
     private StudentService studentService;
-    
+
     @Resource
     private EnterpriseService enterpriseService;
-    
+
     @Resource
-    private DepartmentService departmentService;
+    private AuditLogService auditLogService;
 
     @Override
     public boolean addContract(ContractAddRequest contractAddRequest, UserVO loginUser) {
@@ -73,13 +74,13 @@ public class ContractServiceImpl extends ServiceImpl<ContractMapper, Contract>
         // 2.设置学生信息
         contract.setStudentId(student.getId());
         contract.setStudentName(studentName);
-        
+
         // 3.设置企业信息
         Enterprise enterprise = enterpriseService.getById(loginUser.getId());
         ThrowUtils.throwIf(enterprise == null, ErrorCode.PARAMS_ERROR, "企业不存在");
         contract.setEnterpriseName(enterprise.getEnterpriseName());
         contract.setEnterpriseId(enterprise.getId());
- 
+
         // 4.插入数据库
         boolean result = this.save(contract);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
@@ -149,19 +150,19 @@ public class ContractServiceImpl extends ServiceImpl<ContractMapper, Contract>
 
         HashSet<Integer> statusSet = new HashSet<>();
         // 查询审核中
-        if(status == ContractStatusEnum.STUDENT_PENDING.getValue() || status == ContractStatusEnum.TEACHER_PENDING.getValue()){
+        if (status == ContractStatusEnum.STUDENT_PENDING.getValue() || status == ContractStatusEnum.TEACHER_PENDING.getValue()) {
             statusSet.add(ContractStatusEnum.STUDENT_PENDING.getValue());
             statusSet.add(ContractStatusEnum.TEACHER_PENDING.getValue());
             queryWrapper.in("status", statusSet);
         }
         // 查询已拒绝
-        if(status == ContractStatusEnum.STUDENT_REJECTED.getValue() || status == ContractStatusEnum.TEACHER_REJECTED.getValue()){
+        if (status == ContractStatusEnum.STUDENT_REJECTED.getValue() || status == ContractStatusEnum.TEACHER_REJECTED.getValue()) {
             statusSet.add(ContractStatusEnum.STUDENT_REJECTED.getValue());
             statusSet.add(ContractStatusEnum.TEACHER_REJECTED.getValue());
             queryWrapper.in("status", statusSet);
         }
         // 查询已通过
-        if(status == ContractStatusEnum.RESOLVED.getValue()){
+        if (status == ContractStatusEnum.RESOLVED.getValue()) {
             queryWrapper.eq("status", ContractStatusEnum.RESOLVED.getValue());
         }
 
@@ -209,50 +210,68 @@ public class ContractServiceImpl extends ServiceImpl<ContractMapper, Contract>
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean auditContract(AuditRequest auditRequest, UserVO loginUser) {
         ThrowUtils.throwIf(loginUser == null, ErrorCode.NOT_LOGIN_ERROR);
         int requestStatus = auditRequest.getStatus();
-        ThrowUtils.throwIf(requestStatus != 0 && requestStatus != 1, ErrorCode.PARAMS_ERROR);
+        List<Integer> values = AuditResultEnum.getValues();
+        ThrowUtils.throwIf(!values.contains(requestStatus), ErrorCode.PARAMS_ERROR, "状态值错误");
         // 1.查询合同
         Contract contract = this.getById(auditRequest.getId());
         ThrowUtils.throwIf(contract == null, ErrorCode.NOT_FOUND_ERROR, "合同不存在");
 
         // 2.审核校验
         String userRole = loginUser.getUserRole();
+        int resolvedValue = AuditResultEnum.RESOLVED.getValue();
+        int rejectedValue = AuditResultEnum.REJECTED.getValue();
+        String studentRoleValue = UserRoleEnum.STUDENT.getValue();
+        String teacherRoleValue = UserRoleEnum.TEACHER.getValue();
 
         // 学生只能审核自己的
-        ThrowUtils.throwIf(UserRoleEnum.STUDENT.getValue().equals(userRole) && contract.getStudentId() != loginUser.getId(), ErrorCode.NO_AUTH_ERROR);
+        long userId = loginUser.getId();
+        ThrowUtils.throwIf(studentRoleValue.equals(userRole) && contract.getStudentId() != userId, ErrorCode.NO_AUTH_ERROR);
         // 学生只能审核状态为0的
-        ThrowUtils.throwIf(UserRoleEnum.STUDENT.getValue().equals(userRole) && !ContractStatusEnum.STUDENT_PENDING.getValue().equals(contract.getStatus()), ErrorCode.NO_AUTH_ERROR);
+        ThrowUtils.throwIf(studentRoleValue.equals(userRole) && !ContractStatusEnum.STUDENT_PENDING.getValue().equals(contract.getStatus()), ErrorCode.NO_AUTH_ERROR);
         // 老师只能审核状态为1的
-        ThrowUtils.throwIf(UserRoleEnum.TEACHER.getValue().equals(userRole) && !ContractStatusEnum.TEACHER_PENDING.getValue().equals(contract.getStatus()), ErrorCode.NO_AUTH_ERROR);
+        ThrowUtils.throwIf(teacherRoleValue.equals(userRole) && !ContractStatusEnum.TEACHER_PENDING.getValue().equals(contract.getStatus()), ErrorCode.NO_AUTH_ERROR);
         // 拒绝的话需要填写拒绝原因
         String rejectReason = auditRequest.getRejectReason();
-        ThrowUtils.throwIf(requestStatus == 0 && StringUtils.isBlank(rejectReason), ErrorCode.PARAMS_ERROR, "拒绝原因不能为空");
+        ThrowUtils.throwIf(requestStatus == rejectedValue && StringUtils.isBlank(rejectReason), ErrorCode.PARAMS_ERROR, "拒绝原因不能为空");
 
         // 根据不同角色更新合同状态
-        if(UserRoleEnum.STUDENT.getValue().equals(userRole)){
-            if(requestStatus == 0){
+        if (studentRoleValue.equals(userRole)) {
+            if (requestStatus == rejectedValue) {
                 contract.setStatus(ContractStatusEnum.STUDENT_REJECTED.getValue());
                 contract.setRejectReason(rejectReason);
             }
-            if(requestStatus == 1){
+            if (requestStatus == resolvedValue) {
                 contract.setStatus(ContractStatusEnum.TEACHER_PENDING.getValue());
             }
-        } else if(UserRoleEnum.TEACHER.getValue().equals(userRole)){
-            if(requestStatus == 0){
+        } else if (teacherRoleValue.equals(userRole)) {
+            if (requestStatus == rejectedValue) {
                 contract.setStatus(ContractStatusEnum.TEACHER_REJECTED.getValue());
                 contract.setRejectReason(rejectReason);
             }
-            if(requestStatus == 1){
+            if (requestStatus == resolvedValue) {
                 contract.setStatus(ContractStatusEnum.RESOLVED.getValue());
             }
-            // 设置审核人信息
-            contract.setTeacherId(loginUser.getId());
+            // 设置教师信息
+            contract.setTeacherId(userId);
             contract.setTeacherName(loginUser.getUserName());
-        }else{
+        } else {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
+
+        // 添加审核记录
+        AuditLog auditLog = new AuditLog();
+        auditLog.setUserId(loginUser.getId());
+        auditLog.setUserName(loginUser.getUserName());
+        auditLog.setTargetType(AuditTargetTypeEnum.CONTRACT.getValue());
+        auditLog.setTargetId(contract.getId());
+        auditLog.setTargetName(contract.getFileName());
+        auditLog.setStatus(requestStatus);
+        auditLog.setRejectReason(rejectReason);
+        auditLogService.addAuditLog(auditLog);
 
         // 3.操作数据库
         boolean result = this.updateById(contract);

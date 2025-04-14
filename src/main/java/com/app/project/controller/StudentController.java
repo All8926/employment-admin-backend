@@ -50,7 +50,6 @@ public class StudentController {
     @Resource
     private UserService userService;
 
-    // region 增删改查
 
     /**
      * 注册学生信息
@@ -100,6 +99,7 @@ public class StudentController {
      * @param studentUpdateRequest
      * @return
      */
+    @ApiOperation(value = "更新学生信息（管理员使用）")
     @PostMapping("/update")
     @AuthCheck(mustRoles = {UserConstant.ADMIN_ROLE, UserConstant.TEACHER_ROLE})
     public BaseResponse<Boolean> updateStudent(@RequestBody StudentUpdateRequest studentUpdateRequest) {
@@ -129,7 +129,7 @@ public class StudentController {
      * @param request
      * @return
      */
-    @ApiOperation(value = "分页获取学生信息列表（封装类）")
+    @ApiOperation(value = "分页获取学生信息列表")
     @PostMapping("/list/page/vo")
     @AuthCheck(mustRoles = {UserConstant.ADMIN_ROLE, UserConstant.TEACHER_ROLE})
     public BaseResponse<Page<StudentVO>> listStudentVOByPage(@RequestBody StudentQueryRequest studentQueryRequest,

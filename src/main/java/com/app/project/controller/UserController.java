@@ -3,7 +3,6 @@ package com.app.project.controller;
 import com.app.project.common.BaseResponse;
 import com.app.project.common.ErrorCode;
 import com.app.project.common.ResultUtils;
-import com.app.project.config.WxOpenConfig;
 import com.app.project.exception.BusinessException;
 import com.app.project.model.dto.user.UserLoginRequest;
 import com.app.project.model.vo.UserVO;
@@ -34,13 +33,6 @@ public class UserController {
 
     @Resource
     private UserService userService;
-
-    @Resource
-    private WxOpenConfig wxOpenConfig;
-
-    // region 登录相关
-
-
 
     /**
      * 用户登录

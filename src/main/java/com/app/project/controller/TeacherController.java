@@ -46,21 +46,17 @@ public class TeacherController {
     @Resource
     private UserService userService;
 
-    // region 增删改查
-
     /**
      * 创建教师信息
      *
      * @param teacherAddRequest
-     * @param request
      * @return
      */
-    @ApiOperation(value = "创建教师信息")
-    @PostMapping("/add")
-    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Boolean> addTeacher(@Valid @RequestBody TeacherAddRequest teacherAddRequest, HttpServletRequest request) {
+    @ApiOperation(value = "注册教师信息")
+    @PostMapping("/register")
+    public BaseResponse<Boolean> addTeacher(@Valid @RequestBody TeacherAddRequest teacherAddRequest ) {
         ThrowUtils.throwIf(teacherAddRequest == null, ErrorCode.PARAMS_ERROR);
-        Boolean result = teacherService.addTeacher(teacherAddRequest);
+        Boolean result = teacherService.registerTeacher(teacherAddRequest);
         return ResultUtils.success(result);
     }
 
@@ -95,14 +91,13 @@ public class TeacherController {
      * @param teacherUpdateRequest
      * @return
      */
-    @ApiOperation(value = "更新教师信息")
+    @ApiOperation(value = "更新教师信息(管理员使用)")
     @PostMapping("/update")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> updateTeacher(@Valid @RequestBody TeacherUpdateRequest teacherUpdateRequest) {
         if (teacherUpdateRequest == null || teacherUpdateRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        // todo 在此处将实体类和 DTO 进行转换
         Teacher teacher = new Teacher();
         BeanUtils.copyProperties(teacherUpdateRequest, teacher);
 
@@ -116,50 +111,17 @@ public class TeacherController {
         return ResultUtils.success(true);
     }
 
-    /**
-     * 根据 id 获取教师信息（封装类）
-     *
-     * @param id
-     * @return
-     */
-    @ApiOperation(value = "根据 id 获取教师信息（封装类）")
-    @GetMapping("/get/vo")
-    public BaseResponse<TeacherVO> getTeacherVOById(long id, HttpServletRequest request) {
-        ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
-        // 查询数据库
-        Teacher teacher = teacherService.getById(id);
-        ThrowUtils.throwIf(teacher == null, ErrorCode.NOT_FOUND_ERROR);
-        // 获取封装类
-        return ResultUtils.success(teacherService.getTeacherVO(teacher, request));
-    }
 
     /**
-     * 分页获取教师信息列表（仅管理员可用）
-     *
-     * @param teacherQueryRequest
-     * @return
-     */
-    @ApiOperation(value = "分页获取教师信息列表（仅管理员可用）")
-    @PostMapping("/list/page")
-    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Page<Teacher>> listTeacherByPage(@RequestBody TeacherQueryRequest teacherQueryRequest) {
-        long current = teacherQueryRequest.getCurrent();
-        long size = teacherQueryRequest.getPageSize();
-        // 查询数据库
-        Page<Teacher> teacherPage = teacherService.page(new Page<>(current, size),
-                teacherService.getQueryWrapper(teacherQueryRequest));
-        return ResultUtils.success(teacherPage);
-    }
-
-    /**
-     * 分页获取教师信息列表（封装类）
+     * 分页获取教师信息列表
      *
      * @param teacherQueryRequest
      * @param request
      * @return
      */
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     @PostMapping("/list/page/vo")
-    @ApiOperation(value = "分页获取教师信息列表（封装类）")
+    @ApiOperation(value = "分页获取教师信息列表")
     public BaseResponse<Page<TeacherVO>> listTeacherVOByPage(@RequestBody TeacherQueryRequest teacherQueryRequest,
                                                                HttpServletRequest request) {
         long current = teacherQueryRequest.getCurrent();
@@ -174,15 +136,14 @@ public class TeacherController {
     }
 
 
-
     /**
-     * 编辑教师信息（给用户使用）
+     * 编辑教师信息
      *
      * @param teacherEditRequest
      * @param request
      * @return
      */
-    @ApiOperation(value = "编辑教师信息（给用户使用）")
+    @ApiOperation(value = "编辑教师信息（用户使用）")
     @PostMapping("/edit")
     public BaseResponse<Boolean> editTeacher(@RequestBody TeacherEditRequest teacherEditRequest, HttpServletRequest request) {
         if (teacherEditRequest == null || teacherEditRequest.getId() <= 0) {

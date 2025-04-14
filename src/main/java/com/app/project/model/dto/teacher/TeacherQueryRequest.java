@@ -1,14 +1,11 @@
 package com.app.project.model.dto.teacher;
 
 import com.app.project.common.PageRequest;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * 查询教师信息请求
@@ -71,7 +68,7 @@ public class TeacherQueryRequest extends PageRequest implements Serializable {
     /**
      * 所属部门ID
      */
-    private Long deptId;
+//    private Long deptId;
 
     /**
      * 状态 0-待审核 1-已通过 2-已拒绝

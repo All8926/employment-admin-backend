@@ -11,12 +11,16 @@ import com.app.project.mapper.EnterpriseCertificationMapper;
 import com.app.project.model.dto.enterpriseCertification.EnterpriseCertificationAddRequest;
 import com.app.project.model.dto.enterpriseCertification.EnterpriseCertificationEditRequest;
 import com.app.project.model.dto.enterpriseCertification.EnterpriseCertificationQueryRequest;
+import com.app.project.model.entity.AuditLog;
 import com.app.project.model.entity.Enterprise;
 import com.app.project.model.entity.EnterpriseCertification;
+import com.app.project.model.enums.AuditResultEnum;
+import com.app.project.model.enums.AuditTargetTypeEnum;
 import com.app.project.model.enums.UserRoleEnum;
 import com.app.project.model.vo.EnterpriseCertificationVO;
 import com.app.project.model.vo.EnterpriseVO;
 import com.app.project.model.vo.UserVO;
+import com.app.project.service.AuditLogService;
 import com.app.project.service.EnterpriseCertificationService;
 import com.app.project.service.EnterpriseService;
 import com.app.project.utils.SqlUtils;
@@ -36,16 +40,19 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
-* @author Administrator
-* @description 针对表【enterprise_certification(企业资质)】的数据库操作Service实现
-* @createDate 2025-04-12 13:07:27
-*/
+ * @author Administrator
+ * @description 针对表【enterprise_certification(企业资质)】的数据库操作Service实现
+ * @createDate 2025-04-12 13:07:27
+ */
 @Service
 public class EnterpriseCertificationServiceImpl extends ServiceImpl<EnterpriseCertificationMapper, EnterpriseCertification>
-    implements EnterpriseCertificationService {
+        implements EnterpriseCertificationService {
 
     @Resource
     private EnterpriseService enterpriseService;
+
+    @Resource
+    private AuditLogService auditLogService;
 
     @Override
     public boolean addEnterpriseCertification(EnterpriseCertificationAddRequest enterpriseCertificationAddRequest, UserVO loginUser) {
@@ -155,7 +162,7 @@ public class EnterpriseCertificationServiceImpl extends ServiceImpl<EnterpriseCe
         enterpriseCertificationVOList.forEach(enterpriseCertificationVO -> {
             List<Enterprise> enterprises = userIdDepartmentListMap.get(enterpriseCertificationVO.getUserId());
             if (CollUtil.isNotEmpty(enterprises) && enterprises.size() != 0) {
-                  EnterpriseVO enterpriseVO = new EnterpriseVO();
+                EnterpriseVO enterpriseVO = new EnterpriseVO();
                 BeanUtils.copyProperties(enterprises.get(0), enterpriseVO);
                 enterpriseCertificationVO.setEnterprise(enterpriseVO);
             }
@@ -169,32 +176,50 @@ public class EnterpriseCertificationServiceImpl extends ServiceImpl<EnterpriseCe
     @Transactional(rollbackFor = Exception.class)
     public boolean auditEnterpriseCertification(AuditRequest auditRequest, UserVO loginUser) {
         ThrowUtils.throwIf(loginUser == null, ErrorCode.NOT_LOGIN_ERROR);
+
+        // 校验状态是否合法
         int requestStatus = auditRequest.getStatus();
-        ThrowUtils.throwIf(requestStatus != 0 && requestStatus != 1, ErrorCode.PARAMS_ERROR);
+        List<Integer> values = AuditResultEnum.getValues();
+        ThrowUtils.throwIf(!values.contains(requestStatus), ErrorCode.PARAMS_ERROR,"状态值错误");
         // 查询资质
         EnterpriseCertification enterpriseCertification = this.getById(auditRequest.getId());
         ThrowUtils.throwIf(enterpriseCertification == null, ErrorCode.NOT_FOUND_ERROR, "资质不存在");
 
         // 拒绝的话需要填写拒绝原因
         String rejectReason = auditRequest.getRejectReason();
-        ThrowUtils.throwIf(requestStatus == 0 && StringUtils.isBlank(rejectReason), ErrorCode.PARAMS_ERROR, "拒绝原因不能为空");
-        //拒绝
-        if(requestStatus == 0){
+        int resolvedValue = AuditResultEnum.RESOLVED.getValue();
+        int rejectedValue = AuditResultEnum.REJECTED.getValue();
+        ThrowUtils.throwIf(requestStatus == rejectedValue && StringUtils.isBlank(rejectReason), ErrorCode.PARAMS_ERROR, "拒绝原因不能为空");
+
+       //拒绝
+        if (requestStatus == rejectedValue) {
             enterpriseCertification.setStatus(2);
             enterpriseCertification.setRejectReason(rejectReason);
         }
         // 通过
-        if(requestStatus == 1){
-            enterpriseCertification.setStatus(1);
+        if (requestStatus == resolvedValue) {
+            enterpriseCertification.setStatus(resolvedValue);
 
             // 企业未认证的话只要资质通过就设置为已认证
             Enterprise enterprise = enterpriseService.getById(enterpriseCertification.getUserId());
             int isAuthorized = enterprise.getIsAuthorized();
-            if(isAuthorized == 0){
-                enterprise.setIsAuthorized(1);
+            if (isAuthorized == rejectedValue) {
+                enterprise.setIsAuthorized(resolvedValue);
                 enterpriseService.updateById(enterprise);
             }
         }
+
+        // 添加审核记录
+        AuditLog auditLog = new AuditLog();
+        auditLog.setUserId(loginUser.getId());
+        auditLog.setUserName(loginUser.getUserName());
+        auditLog.setTargetType(AuditTargetTypeEnum.CERTIFICATION.getValue());
+        auditLog.setTargetId(enterpriseCertification.getId());
+        auditLog.setTargetName(enterpriseCertification.getFileName());
+        auditLog.setStatus(enterpriseCertification.getStatus());
+        auditLog.setRejectReason(rejectReason);
+        auditLogService.addAuditLog(auditLog);
+
         boolean result = this.updateById(enterpriseCertification);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return true;

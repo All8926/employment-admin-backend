@@ -1,12 +1,9 @@
 package com.app.project.model.dto.teacher;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * 创建教师信息请求
@@ -81,10 +78,6 @@ public class TeacherAddRequest implements Serializable {
      */
     private String userProfile;
 
-    /**
-     * 用户角色：admin/student/teacher/enterprise
-     */
-    private String userRole;
 
     private static final long serialVersionUID = 1L;
 }
