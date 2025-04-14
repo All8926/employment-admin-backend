@@ -84,30 +84,6 @@ public class AuthInterceptor {
 
         return joinPoint.proceed();
 
-
-
-
-//        UserRoleEnum mustRoleEnum = UserRoleEnum.getEnumByValue(mustRole);
-//        // 不需要权限，放行
-//        if (mustRoleEnum == null || mustRoles.length == 0) {
-//            return joinPoint.proceed();
-//        }
-//        // 必须有该权限才通过
-//        UserRoleEnum userRoleEnum = UserRoleEnum.getEnumByValue(loginUser.getUserRole());
-//        if (userRoleEnum == null) {
-//            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-//        }
-//        // 如果被封号，直接拒绝
-//        if (UserRoleEnum.BAN.equals(userRoleEnum)) {
-//            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-//        }
-//
-//        // 用户权限必须与设置的权限一致
-//        if(!mustRoleEnum.equals(userRoleEnum)){
-//            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-//        }
-//        // 通过权限校验，放行
-//        return joinPoint.proceed();
     }
 }
 
