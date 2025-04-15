@@ -15,7 +15,9 @@ import java.util.stream.Collectors;
 public enum AuditTargetTypeEnum {
 
     CERTIFICATION("企业资质", "certification"),
-    CONTRACT("合同", "contract");
+    CONTRACT("合同", "contract"),
+    REGISTER("注册账号", "register");
+
 
     private final String text;
 

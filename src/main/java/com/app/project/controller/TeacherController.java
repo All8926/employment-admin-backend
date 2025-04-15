@@ -22,7 +22,10 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -105,6 +108,7 @@ public class TeacherController {
         long id = teacherUpdateRequest.getId();
         Teacher oldTeacher = teacherService.getById(id);
         ThrowUtils.throwIf(oldTeacher == null, ErrorCode.NOT_FOUND_ERROR);
+
         // 操作数据库
         boolean result = teacherService.updateById(teacher);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);

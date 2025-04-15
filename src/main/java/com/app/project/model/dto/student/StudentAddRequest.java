@@ -1,15 +1,11 @@
 package com.app.project.model.dto.student;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
-import javax.validation.constraints.Max;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * 创建学生信息请求
@@ -25,7 +21,7 @@ public class StudentAddRequest implements Serializable {
      * 账号
      */
     @NotBlank(message = "账号不能为空")
-    @Size(max = 10, min = 4, message = "账号长度限制4-10位")
+    @Size(max = 12, min = 4, message = "账号长度限制4-12位")
     private String userAccount;
 
     /**

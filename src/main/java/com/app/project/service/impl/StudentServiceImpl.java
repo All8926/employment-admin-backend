@@ -5,6 +5,7 @@ import com.alibaba.excel.util.StringUtils;
 import com.app.project.common.ErrorCode;
 import com.app.project.constant.CommonConstant;
 import com.app.project.exception.BusinessException;
+import com.app.project.exception.ThrowUtils;
 import com.app.project.mapper.StudentMapper;
 import com.app.project.model.dto.student.StudentAddRequest;
 import com.app.project.model.dto.student.StudentQueryRequest;
@@ -72,6 +73,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student>
         Integer gender = studentQueryRequest.getGender();
         Integer status = studentQueryRequest.getStatus();
         String userAccount = studentQueryRequest.getUserAccount();
+          String graduationGoes = studentQueryRequest.getGraduationGoes();
         String sortOrder = studentQueryRequest.getSortOrder();
         String sortField = studentQueryRequest.getSortField();
 
@@ -81,6 +83,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student>
         queryWrapper.like(StringUtils.isNotBlank(email), "email", email);
         queryWrapper.like(StringUtils.isNotBlank(phone), "phone", phone);
         queryWrapper.like(StringUtils.isNotBlank(userAccount), "userAccount", userAccount);
+        queryWrapper.like(StringUtils.isNotBlank(graduationGoes), "graduationGoes", graduationGoes);
 
         // 精确查询
         queryWrapper.eq(ObjectUtils.isNotEmpty(id), "id", id);
@@ -179,8 +182,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student>
         }
         // Student => StudentVO
         List<StudentVO> studentVOList = studentList.stream().map(student -> {
-            StudentVO studentVO = new StudentVO();
-            BeanUtils.copyProperties(student, studentVO);
+            StudentVO studentVO =  StudentVO.objToVo(student);
             return studentVO;
         }).collect(Collectors.toList());
 
@@ -213,23 +215,43 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student>
             studentQueryWrapper.eq("userAccount", userAccount);
             Student studentOne = this.getOne(studentQueryWrapper);
 
+            // 检测学号是否已注册
+            studentQueryWrapper = new QueryWrapper<>();
+            studentQueryWrapper.eq("studentNumber", student.getStudentNumber());
+            studentQueryWrapper.eq("status",RegisterStatusEnum.RESOLVED.getValue());
+            Student studentByNumber = this.getOne(studentQueryWrapper);
+            ThrowUtils.throwIf(studentByNumber != null, ErrorCode.PARAMS_ERROR, "学号已存在");
+
             // 2. 存在 -> 校验账号状态
             if (studentOne != null) {
                 int studentOneStatus = studentOne.getStatus();
-                if (studentOneStatus == RegisterStatusEnum.REJECTED.getValue()) {
-                    throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号已被拒绝");
-                }
+//                if (studentOneStatus == RegisterStatusEnum.REJECTED.getValue()) {
+//                    throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号已被拒绝");
+//                }
                 if (studentOneStatus == RegisterStatusEnum.PENDING.getValue()) {
                     throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号正在审核中");
                 }
-                throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号已存在");
+                if(studentOneStatus == RegisterStatusEnum.RESOLVED.getValue()){
+                    throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号已存在");
+                }
+
             }
 
             // 3.加密
             String encryptPassword = DigestUtils.md5DigestAsHex((SALT + student.getUserPassword()).getBytes());
             student.setUserPassword(encryptPassword);
-            boolean saveResult = this.save(student);
-            if (!saveResult) {
+
+            // 4.操作数据库
+            // 账号已存在则更新数据，否则就插入新数据
+            boolean result;
+            if(studentOne != null){
+                student.setStatus(RegisterStatusEnum.PENDING.getValue());
+                student.setId(studentOne.getId());
+                result = this.updateById(student);
+            }else{
+                result = this.save(student);
+            }
+            if (!result) {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注册失败，数据库错误");
             }
             return true;

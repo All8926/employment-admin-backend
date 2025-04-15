@@ -3,7 +3,6 @@ package com.app.project.service.impl;
 import com.app.project.common.ErrorCode;
 import com.app.project.exception.BusinessException;
 import com.app.project.exception.ThrowUtils;
-import com.app.project.model.dto.student.StudentEditRequest;
 import com.app.project.model.entity.Department;
 import com.app.project.model.entity.Enterprise;
 import com.app.project.model.entity.Student;
@@ -70,7 +69,7 @@ public class UserVOFactory {
                 studentVO.setDeptName(department.getName());
             }
         }
-        BeanUtils.copyProperties(student, studentVO);
+        studentVO = StudentVO.objToVo(student);
         return studentVO;
     }
 

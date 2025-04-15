@@ -1,9 +1,12 @@
 package com.app.project.controller;
 
+import com.app.project.annotation.AuthCheck;
 import com.app.project.common.BaseResponse;
 import com.app.project.common.ErrorCode;
 import com.app.project.common.ResultUtils;
+import com.app.project.constant.UserConstant;
 import com.app.project.exception.BusinessException;
+import com.app.project.model.dto.user.UserAuditRequest;
 import com.app.project.model.dto.user.UserLoginRequest;
 import com.app.project.model.vo.UserVO;
 import com.app.project.service.UserService;
@@ -87,6 +90,21 @@ public class UserController {
         UserVO userVO = userService.getLoginUser(request);
 
         return ResultUtils.success(userVO);
+    }
+
+    @ApiOperation(value = "审核账号")
+    @PostMapping("/audit")
+    @AuthCheck(mustRoles = {UserConstant.ADMIN_ROLE, UserConstant.TEACHER_ROLE})
+    public BaseResponse<Boolean> auditUser(@Valid @RequestBody UserAuditRequest UserAuditRequest, HttpServletRequest request) {
+        if (UserAuditRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        UserVO loginUser = userService.getLoginUser(request);
+        if (loginUser == null) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
+        }
+        boolean result = userService.auditUser(UserAuditRequest, loginUser);
+        return ResultUtils.success(result);
     }
 
 }

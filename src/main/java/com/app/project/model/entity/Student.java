@@ -65,6 +65,22 @@ public class Student implements Serializable {
     private Long deptId;
 
     /**
+     * 毕业时间
+     */
+    private Date graduationDate;
+
+    /**
+     * 毕业去向
+     */
+
+    private String graduationGoes;
+
+    /**
+     * 无去向原因
+     */
+    private String notGoesReason;
+
+    /**
      * 状态 0-待审核 1-已通过 2-已拒绝
      */
     private Integer status;

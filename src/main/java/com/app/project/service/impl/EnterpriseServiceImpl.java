@@ -155,20 +155,32 @@ public class EnterpriseServiceImpl extends ServiceImpl<EnterpriseMapper, Enterpr
             // 2. 存在 -> 校验账号状态
             if (enterpriseOne != null) {
                 int enterpriseOneStatus = enterpriseOne.getStatus();
-                if (enterpriseOneStatus == RegisterStatusEnum.REJECTED.getValue()) {
-                    throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号已被拒绝");
-                }
+//                if (enterpriseOneStatus == RegisterStatusEnum.REJECTED.getValue()) {
+//                    throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号已被拒绝");
+//                }
                 if (enterpriseOneStatus == RegisterStatusEnum.PENDING.getValue()) {
                     throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号正在审核中");
                 }
-                throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号已存在");
+                if(enterpriseOneStatus == RegisterStatusEnum.RESOLVED.getValue()){
+                    throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号已存在");
+                }
             }
 
             // 3.加密
             String encryptPassword = DigestUtils.md5DigestAsHex((SALT + enterprise.getUserPassword()).getBytes());
             enterprise.setUserPassword(encryptPassword);
-            boolean saveResult = this.save(enterprise);
-            if (!saveResult) {
+
+            // 4.操作数据库
+            // 账号已存在则更新数据，否则就插入新数据
+            boolean result;
+            if(enterpriseOne != null){
+                enterprise.setStatus(RegisterStatusEnum.PENDING.getValue());
+                enterprise.setId(enterpriseOne.getId());
+                result = this.updateById(enterprise);
+            }else{
+                result = this.save(enterprise);
+            }
+            if (!result) {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注册失败，数据库错误");
             }
             return true;

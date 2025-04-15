@@ -33,8 +33,6 @@ public class EnterpriseAddRequest implements Serializable {
     /**
      * 姓名
      */
-    @NotBlank(message = "姓名不能为空")
-    @Size(max = 20, min = 2, message = "姓名限制2-20个字符")
     private String userName;
 
 
@@ -53,13 +51,11 @@ public class EnterpriseAddRequest implements Serializable {
     /**
      * 手机号
      */
-    @Size(max = 12, message = "手机号不能超过12位")
     private String phone;
 
     /**
      * 邮箱
      */
-    @Size(max = 20, message = "邮箱长度不能超过20位")
     private String email;
 
 
@@ -85,11 +81,13 @@ public class EnterpriseAddRequest implements Serializable {
     /**
      * 统一社会信用代码
      */
+    @NotBlank(message = "统一社会信用代码不能为空")
     private String licenseNum;
 
     /**
      * 办公地址
      */
+    @NotBlank(message = "办公地址不能为空")
     private String address;
 
     /**

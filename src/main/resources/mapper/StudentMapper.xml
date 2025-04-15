@@ -15,6 +15,9 @@
             <result property="deptId" column="deptId" jdbcType="BIGINT"/>
             <result property="phone" column="phone" jdbcType="VARCHAR"/>
             <result property="email" column="email" jdbcType="VARCHAR"/>
+            <result property="graduationGoes" column="graduationGoes" jdbcType="VARCHAR" />
+            <result property="notGoesReason" column="notGoesReason" jdbcType="VARCHAR"/>
+            <result property="graduationDate" column="graduationDate" jdbcType="TIMESTAMP"/>
             <result property="status" column="status" jdbcType="TINYINT"/>
             <result property="userProfile" column="userProfile" jdbcType="VARCHAR"/>
             <result property="userRole" column="userRole" jdbcType="VARCHAR"/>
@@ -24,7 +27,7 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,userAccount,userPassword,deptId,
+        id,userAccount,userPassword,deptId,graduationDate,graduationGoes,notGoesReason,
         userName,userAvatar,gender,
         studentNumber,phone,email,
         status,userProfile,userRole,

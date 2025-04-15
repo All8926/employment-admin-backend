@@ -1,5 +1,6 @@
 package com.app.project.service;
 
+import com.app.project.model.dto.user.UserAuditRequest;
 import com.app.project.model.dto.user.UserLoginRequest;
 import com.app.project.model.vo.UserVO;
 
@@ -41,7 +42,11 @@ public interface UserService  {
     boolean userLogout(HttpServletRequest request);
 
 
-
-
-
+    /**
+     * 审核用户
+     * @param userAuditRequest
+     * @param loginUser
+     * @return
+     */
+    boolean auditUser(UserAuditRequest userAuditRequest, UserVO loginUser);
 }

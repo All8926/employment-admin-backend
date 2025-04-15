@@ -162,8 +162,7 @@ public class StudentController {
         if (studentEditRequest == null || studentEditRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        Student student = new Student();
-        BeanUtils.copyProperties(studentEditRequest, student);
+        Student student = StudentEditRequest.dtoToObj(studentEditRequest);
 
         // 判断是否存在
         long id = studentEditRequest.getId();

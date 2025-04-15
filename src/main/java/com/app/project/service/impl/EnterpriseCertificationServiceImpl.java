@@ -87,6 +87,7 @@ public class EnterpriseCertificationServiceImpl extends ServiceImpl<EnterpriseCe
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean removeEnterpriseCertificationById(DeleteRequest deleteRequest, UserVO loginUser) {
         ThrowUtils.throwIf(loginUser == null, ErrorCode.NOT_LOGIN_ERROR);
         // 只能修改自己的资质
@@ -96,6 +97,21 @@ public class EnterpriseCertificationServiceImpl extends ServiceImpl<EnterpriseCe
         ThrowUtils.throwIf(oldEnterpriseCertification == null, ErrorCode.NOT_FOUND_ERROR, "资质不存在");
         ThrowUtils.throwIf(userId != oldEnterpriseCertification.getUserId(), ErrorCode.NO_AUTH_ERROR);
 
+        // 查询删除的是否最后一条资质
+        QueryWrapper<EnterpriseCertification> enterpriseCertificationQueryWrapper = new QueryWrapper<>();
+        enterpriseCertificationQueryWrapper.eq("userId", userId);
+        enterpriseCertificationQueryWrapper.eq("status",AuditResultEnum.RESOLVED.getValue());
+        long count = this.count(enterpriseCertificationQueryWrapper);
+        // 如果是，则修改企业认证状态为未认证
+        if(count == 1){
+              Enterprise enterprise = new Enterprise();
+              enterprise.setIsAuthorized(0);
+              enterprise.setId(userId);
+              boolean enterpriseResult = enterpriseService.updateById(enterprise);
+              ThrowUtils.throwIf(!enterpriseResult,ErrorCode.OPERATION_ERROR);
+        }
+
+        // 删除资质
         boolean result = this.removeById(enterpriseCertificationId);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return true;
@@ -216,7 +232,7 @@ public class EnterpriseCertificationServiceImpl extends ServiceImpl<EnterpriseCe
         auditLog.setTargetType(AuditTargetTypeEnum.CERTIFICATION.getValue());
         auditLog.setTargetId(enterpriseCertification.getId());
         auditLog.setTargetName(enterpriseCertification.getFileName());
-        auditLog.setStatus(enterpriseCertification.getStatus());
+        auditLog.setStatus(auditRequest.getStatus());
         auditLog.setRejectReason(rejectReason);
         auditLogService.addAuditLog(auditLog);
 

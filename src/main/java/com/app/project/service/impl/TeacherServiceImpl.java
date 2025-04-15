@@ -65,20 +65,34 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher>
             // 2. 存在 -> 校验账号状态
             if (teacherOne != null) {
                 int studentOneStatus = teacherOne.getStatus();
-                if (studentOneStatus == RegisterStatusEnum.REJECTED.getValue()) {
-                    throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号已被拒绝");
-                }
+//                if (studentOneStatus == RegisterStatusEnum.REJECTED.getValue()) {
+//                    throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号已被拒绝");
+//                }
                 if (studentOneStatus == RegisterStatusEnum.PENDING.getValue()) {
                     throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号正在审核中");
                 }
-                throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号已存在");
+                if (studentOneStatus == RegisterStatusEnum.RESOLVED.getValue()) {
+                    throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号已存在");
+                }
+
+
             }
 
             // 3.加密
             String encryptPassword = DigestUtils.md5DigestAsHex((SALT + teacher.getUserPassword()).getBytes());
             teacher.setUserPassword(encryptPassword);
-            boolean saveResult = this.save(teacher);
-            if (!saveResult) {
+
+            // 4.操作数据库
+            boolean result;
+            // 账号已存在则更新数据，否则就插入新数据
+            if(teacherOne != null){
+                teacher.setStatus(RegisterStatusEnum.PENDING.getValue());
+                teacher.setId(teacherOne.getId());
+                result = this.updateById(teacher);
+            }else{
+                result = this.save(teacher);
+            }
+            if (!result) {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注册失败，数据库错误");
             }
             return true;

@@ -1,13 +1,10 @@
 package com.app.project.model.dto.student;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * 更新学生信息请求
@@ -48,6 +45,8 @@ public class StudentUpdateRequest implements Serializable {
      * 邮箱
      */
     private String email;
+
+
 
     /**
      * 部门id

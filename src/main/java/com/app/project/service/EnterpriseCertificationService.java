@@ -66,7 +66,7 @@ public interface EnterpriseCertificationService extends IService<EnterpriseCerti
 
     /**
      * 审核企业资质
-     * @param enterpriseCertificationAuditRequest
+     * @param auditRequest
      * @param loginUser
      * @return
      */

@@ -9,6 +9,11 @@ create database if not exists employment_admin;
 use employment_admin;
 
 -- 学生信息表
+use employment_admin;
+ALTER table student
+ADD COLUMN graduationDate date comment '毕业时间' AFTER deptId,
+ADD COLUMN graduationGoes varchar(128) comment '毕业去向' AFTER deptId,
+ADD COLUMN notGoesReason varchar(256) comment '无去向原因' AFTER deptId;
 create table if not exists student
 (
     id            bigint auto_increment comment 'id' primary key,

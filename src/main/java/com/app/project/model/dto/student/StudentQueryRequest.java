@@ -36,6 +36,12 @@ public class StudentQueryRequest extends PageRequest implements Serializable {
      */
 //    private Long deptId;
 
+    /**
+     * 毕业去向
+     */
+    private String graduationGoes;
+
+
 
     /**
      * 性别 0-男 1-女 2-未知
