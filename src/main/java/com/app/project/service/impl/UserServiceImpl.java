@@ -175,11 +175,11 @@ public class UserServiceImpl implements UserService {
             }
             Teacher teacher = new Teacher();
             teacher.setId(userAuditRequest.getId());
-            // 拒绝
+            // 通过
             if (status.equals(AuditResultEnum.RESOLVED.getValue())) {
                 teacher.setStatus(RegisterStatusEnum.RESOLVED.getValue());
             }
-            // 通过
+            // 拒绝
             if (status.equals(AuditResultEnum.REJECTED.getValue())) {
                 teacher.setStatus(RegisterStatusEnum.REJECTED.getValue());
             }

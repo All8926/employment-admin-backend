@@ -5,6 +5,7 @@ import com.alibaba.excel.util.StringUtils;
 import com.app.project.common.ErrorCode;
 import com.app.project.constant.CommonConstant;
 import com.app.project.exception.BusinessException;
+import com.app.project.exception.ThrowUtils;
 import com.app.project.mapper.TeacherMapper;
 import com.app.project.model.dto.teacher.TeacherAddRequest;
 import com.app.project.model.dto.teacher.TeacherQueryRequest;
@@ -61,6 +62,13 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher>
             QueryWrapper<Teacher> teacherQueryWrapper = new QueryWrapper<>();
             teacherQueryWrapper.eq("userAccount", userAccount);
             Teacher teacherOne = this.getOne(teacherQueryWrapper);
+
+            // 检测编号是否已注册
+            teacherQueryWrapper = new QueryWrapper<>();
+            teacherQueryWrapper.eq("teacherNumber", teacher.getTeacherNumber());
+            teacherQueryWrapper.eq("status",RegisterStatusEnum.RESOLVED.getValue());
+            Teacher teacherByNumber = this.getOne(teacherQueryWrapper);
+            ThrowUtils.throwIf(teacherByNumber != null, ErrorCode.PARAMS_ERROR, "编号已存在");
 
             // 2. 存在 -> 校验账号状态
             if (teacherOne != null) {

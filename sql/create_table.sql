@@ -10,28 +10,27 @@ use employment_admin;
 
 -- 学生信息表
 use employment_admin;
-ALTER table student
-ADD COLUMN graduationDate date comment '毕业时间' AFTER deptId,
-ADD COLUMN graduationGoes varchar(128) comment '毕业去向' AFTER deptId,
-ADD COLUMN notGoesReason varchar(256) comment '无去向原因' AFTER deptId;
 create table if not exists student
 (
-    id            bigint auto_increment comment 'id' primary key,
-    userAccount   varchar(256)                           not null comment '账号',
-    userPassword  varchar(512)                           not null comment '密码',
-    userName      varchar(256)                           null comment '姓名',
-    userAvatar    varchar(1024)                          null comment '头像',
-    gender        tinyint      default 2 comment '性别 0-男 1-女 2-未知',
-    studentNumber varchar(256)                           null comment '编号',
-    phone         varchar(11)                            null comment '手机号',
-    email         varchar(256)                           null comment '邮箱',
-    deptId        BIGINT                                 null comment '所属部门ID',
-    status        tinyint      default 0 comment '状态 0-待审核 1-已通过 2-已拒绝',
-    userProfile   varchar(512)                           null comment '用户简介',
-    userRole      varchar(256) default 'student'         not null comment '用户角色：admin/student/teacher/enterprise',
-    createTime    datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
-    updateTime    datetime     default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
-    isDelete      tinyint      default 0                 not null comment '是否删除',
+    id             bigint auto_increment comment 'id' primary key,
+    userAccount    varchar(256)                           not null comment '账号',
+    userPassword   varchar(512)                           not null comment '密码',
+    userName       varchar(256)                           null comment '姓名',
+    userAvatar     varchar(1024)                          null comment '头像',
+    gender         tinyint      default 2 comment '性别 0-男 1-女 2-未知',
+    studentNumber  varchar(256)                           null comment '编号',
+    phone          varchar(11)                            null comment '手机号',
+    email          varchar(256)                           null comment '邮箱',
+    deptId         BIGINT                                 null comment '所属部门ID',
+    graduationDate date                                   null comment '毕业时间',
+    graduationGoes varchar(128)                           null comment '毕业去向',
+    notGoesReason  varchar(256)                           null comment '无去向原因',
+    status         tinyint      default 0 comment '状态 0-待审核 1-已通过 2-已拒绝',
+    userProfile    varchar(512)                           null comment '用户简介',
+    userRole       varchar(256) default 'student'         not null comment '用户角色：admin/student/teacher/enterprise',
+    createTime     datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
+    updateTime     datetime     default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    isDelete       tinyint      default 0                 not null comment '是否删除',
     index idx_userAccount (userAccount)
 ) comment '学生' collate = utf8mb4_unicode_ci;
 
@@ -168,7 +167,7 @@ create table if not exists audit_log
     userName     varchar(256)                       not null comment '审核人姓名',
     targetId     BIGINT                             not null comment '审核对象id',
     targetType   varchar(128)                       not null comment '审核类型',
-    targetName   varchar(256)                         null comment '审核对象名称',
+    targetName   varchar(256)                       null comment '审核对象名称',
     status       TINYINT                            not null comment '0拒绝 1通过',
     rejectReason varchar(256)                       null comment '拒绝原因',
     createTime   datetime default CURRENT_TIMESTAMP not null comment '创建时间',
