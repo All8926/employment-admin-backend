@@ -44,6 +44,11 @@ public class StudentVO extends UserVO {
      */
     private String notGoesReason;
 
+    /**
+     * 是否就业 0-否 1-是
+     */
+    private Integer isEmployed;
+
 
     /**
      * 学号

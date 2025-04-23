@@ -19,6 +19,7 @@
             <result property="notGoesReason" column="notGoesReason" jdbcType="VARCHAR"/>
             <result property="graduationDate" column="graduationDate" jdbcType="TIMESTAMP"/>
             <result property="status" column="status" jdbcType="TINYINT"/>
+            <result property="isEmployed" column="isEmployed" jdbcType="TINYINT"/>
             <result property="userProfile" column="userProfile" jdbcType="VARCHAR"/>
             <result property="userRole" column="userRole" jdbcType="VARCHAR"/>
             <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
@@ -28,7 +29,7 @@
 
     <sql id="Base_Column_List">
         id,userAccount,userPassword,deptId,graduationDate,graduationGoes,notGoesReason,
-        userName,userAvatar,gender,
+        userName,userAvatar,gender,isEmployed,
         studentNumber,phone,email,
         status,userProfile,userRole,
         createTime,updateTime,isDelete

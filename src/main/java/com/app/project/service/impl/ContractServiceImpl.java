@@ -12,15 +12,13 @@ import com.app.project.mapper.ContractMapper;
 import com.app.project.model.dto.contract.ContractAddRequest;
 import com.app.project.model.dto.contract.ContractEditRequest;
 import com.app.project.model.dto.contract.ContractQueryRequest;
-import com.app.project.model.entity.AuditLog;
-import com.app.project.model.entity.Contract;
-import com.app.project.model.entity.Enterprise;
-import com.app.project.model.entity.Student;
+import com.app.project.model.entity.*;
 import com.app.project.model.enums.AuditResultEnum;
 import com.app.project.model.enums.AuditTargetTypeEnum;
 import com.app.project.model.enums.ContractStatusEnum;
 import com.app.project.model.enums.UserRoleEnum;
 import com.app.project.model.vo.ContractVO;
+import com.app.project.model.vo.ResumeVO;
 import com.app.project.model.vo.UserVO;
 import com.app.project.service.*;
 import com.app.project.utils.SqlUtils;
@@ -37,6 +35,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -56,6 +55,9 @@ public class ContractServiceImpl extends ServiceImpl<ContractMapper, Contract>
 
     @Resource
     private AuditLogService auditLogService;
+
+    @Resource
+    private  ResumeService resumeService;
 
     @Override
     public boolean addContract(ContractAddRequest contractAddRequest, UserVO loginUser) {
@@ -150,19 +152,19 @@ public class ContractServiceImpl extends ServiceImpl<ContractMapper, Contract>
 
         HashSet<Integer> statusSet = new HashSet<>();
         // 查询审核中
-        if (status == ContractStatusEnum.STUDENT_PENDING.getValue() || status == ContractStatusEnum.TEACHER_PENDING.getValue()) {
+        if (Objects.equals(status, ContractStatusEnum.STUDENT_PENDING.getValue()) || Objects.equals(status, ContractStatusEnum.TEACHER_PENDING.getValue())) {
             statusSet.add(ContractStatusEnum.STUDENT_PENDING.getValue());
             statusSet.add(ContractStatusEnum.TEACHER_PENDING.getValue());
             queryWrapper.in("status", statusSet);
         }
         // 查询已拒绝
-        if (status == ContractStatusEnum.STUDENT_REJECTED.getValue() || status == ContractStatusEnum.TEACHER_REJECTED.getValue()) {
+        if (Objects.equals(status, ContractStatusEnum.STUDENT_REJECTED.getValue()) || Objects.equals(status, ContractStatusEnum.TEACHER_REJECTED.getValue())) {
             statusSet.add(ContractStatusEnum.STUDENT_REJECTED.getValue());
             statusSet.add(ContractStatusEnum.TEACHER_REJECTED.getValue());
             queryWrapper.in("status", statusSet);
         }
         // 查询已通过
-        if (status == ContractStatusEnum.RESOLVED.getValue()) {
+        if (Objects.equals(status, ContractStatusEnum.RESOLVED.getValue())) {
             queryWrapper.eq("status", ContractStatusEnum.RESOLVED.getValue());
         }
 
@@ -197,10 +199,23 @@ public class ContractServiceImpl extends ServiceImpl<ContractMapper, Contract>
         if (CollUtil.isEmpty(contractList)) {
             return contractVOPage;
         }
+
+
         // Contract => ContractVO
         List<ContractVO> contractVOList = contractList.stream().map(contract -> {
             ContractVO contractVO = new ContractVO();
             BeanUtils.copyProperties(contract, contractVO);
+
+            // 获取学生所有的生效简历
+            final QueryWrapper<Resume> resumeQueryWrapper = new QueryWrapper<>();
+            resumeQueryWrapper.eq("userId", contract.getStudentId());
+            resumeQueryWrapper.eq("isActive", 1);
+            final List<ResumeVO> resumeVOList = resumeService.list(resumeQueryWrapper).stream().map(resume -> {
+                ResumeVO resumeVO = new ResumeVO();
+                BeanUtils.copyProperties(resume, resumeVO);
+                return resumeVO;
+            }).collect(Collectors.toList());
+            contractVO.setResumeList(resumeVOList);
             return contractVO;
         }).collect(Collectors.toList());
 

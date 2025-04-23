@@ -14,6 +14,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -27,6 +28,7 @@ public class AuditLogServiceImpl extends ServiceImpl<AuditLogMapper, AuditLog>
         implements AuditLogService {
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Boolean addAuditLog(AuditLog auditLog) {
         // 校验参数是否存在
         int status = auditLog.getStatus();

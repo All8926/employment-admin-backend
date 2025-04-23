@@ -86,6 +86,11 @@ public class Student implements Serializable {
     private Integer status;
 
     /**
+     * 是否就业 0-否 1-是
+     */
+    private Integer isEmployed;
+
+    /**
      * 用户简介
      */
     private String userProfile;

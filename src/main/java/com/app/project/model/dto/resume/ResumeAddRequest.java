@@ -1,12 +1,9 @@
 package com.app.project.model.dto.resume;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * 创建简历信息请求
@@ -30,6 +27,10 @@ public class ResumeAddRequest implements Serializable {
     @NotBlank(message = "简历名称不能为空")
     private String fileName;
 
+    /**
+     * 生效状态 0否 1是
+     */
+    private Integer isActive;
 
     /**
      * 备注

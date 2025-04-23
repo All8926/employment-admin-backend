@@ -2,9 +2,11 @@ package com.app.project.controller;
 
 
 import com.app.project.annotation.AuthCheck;
-import com.app.project.common.*;
+import com.app.project.common.AuditRequest;
+import com.app.project.common.BaseResponse;
+import com.app.project.common.DeleteRequest;
+import com.app.project.common.ResultUtils;
 import com.app.project.constant.UserConstant;
-import com.app.project.exception.ThrowUtils;
 import com.app.project.model.dto.contract.ContractAddRequest;
 import com.app.project.model.dto.contract.ContractEditRequest;
 import com.app.project.model.dto.contract.ContractQueryRequest;
@@ -74,8 +76,6 @@ public class ContractController {
         long size = contractQueryRequest.getPageSize();
         UserVO loginUser = userService.getLoginUser(request);
 
-        // 限制爬虫
-        ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
         // 获取查询条件
         QueryWrapper<Contract> queryWrapper = contractService.getQueryWrapper(contractQueryRequest, loginUser);
 

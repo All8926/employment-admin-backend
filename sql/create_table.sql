@@ -3,13 +3,13 @@
 # @from
 
 -- 创建库
-create database if not exists employment_admin;
+create database if not exists employment_db;
 
 -- 切换库
-use employment_admin;
+use employment_db;
 
 -- 学生信息表
-use employment_admin;
+use employment_db;
 create table if not exists student
 (
     id             bigint auto_increment comment 'id' primary key,
@@ -48,7 +48,7 @@ create table if not exists department
 ) comment '部门表' collate = utf8mb4_unicode_ci;
 
 -- 教师信息表
-use employment_admin;
+use employment_db;
 create table if not exists teacher
 (
     id            bigint auto_increment comment 'id' primary key,
@@ -74,7 +74,7 @@ create table if not exists teacher
 
 
 -- 企业信息表
-use employment_admin;
+use employment_db;
 create table if not exists enterprise
 (
     id             bigint auto_increment comment 'id' primary key,
@@ -159,7 +159,7 @@ create table if not exists contract
 
 
 -- 审核记录表
-use employment_admin;
+use employment_db;
 create table if not exists audit_log
 (
     id           bigint auto_increment comment 'id' primary key,
@@ -175,3 +175,18 @@ create table if not exists audit_log
     isDelete     tinyint  default 0                 not null comment '是否删除',
     index idx_userId (userId)
 ) comment '审核记录' collate = utf8mb4_unicode_ci;
+
+# 签约信息表
+CREATE TABLE IF NOT EXISTS `sign_info`
+(
+    `id`         bigint(20)                             NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `contractId` bigint(20)                             NOT NULL COMMENT '合同ID',
+    `studentId`  bigint(20)                             NOT NULL COMMENT '学生ID',
+    post         varchar(128)                           null comment '岗位',
+    salary       varchar(128)                           null comment '薪资',
+    `remark`     varchar(255) DEFAULT NULL COMMENT '备注',
+    createTime   datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
+    updateTime   datetime     default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    isDelete     tinyint      default 0                 not null comment '是否删除',
+    PRIMARY KEY (`id`)
+) COMMENT ='签约信息表' COLLATE = utf8mb4_unicode_ci;

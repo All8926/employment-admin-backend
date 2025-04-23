@@ -73,7 +73,8 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student>
         Integer gender = studentQueryRequest.getGender();
         Integer status = studentQueryRequest.getStatus();
         String userAccount = studentQueryRequest.getUserAccount();
-          String graduationGoes = studentQueryRequest.getGraduationGoes();
+        String graduationGoes = studentQueryRequest.getGraduationGoes();
+        Integer isEmployed = studentQueryRequest.getIsEmployed();
         String sortOrder = studentQueryRequest.getSortOrder();
         String sortField = studentQueryRequest.getSortField();
 
@@ -90,6 +91,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student>
 //        queryWrapper.eq(ObjectUtils.isNotEmpty(deptId), "deptId", deptId);
         queryWrapper.eq(ObjectUtils.isNotEmpty(gender), "gender", gender);
         queryWrapper.eq(ObjectUtils.isNotEmpty(status), "status", status);
+        queryWrapper.eq(ObjectUtils.isNotEmpty(isEmployed), "isEmployed", isEmployed);
 
         // 转成 studentVO 来取deptId
         StudentVO studentVO = new StudentVO();
@@ -182,7 +184,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student>
         }
         // Student => StudentVO
         List<StudentVO> studentVOList = studentList.stream().map(student -> {
-            StudentVO studentVO =  StudentVO.objToVo(student);
+            StudentVO studentVO = StudentVO.objToVo(student);
             return studentVO;
         }).collect(Collectors.toList());
 
@@ -218,7 +220,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student>
             // 检测学号是否已注册
             studentQueryWrapper = new QueryWrapper<>();
             studentQueryWrapper.eq("studentNumber", student.getStudentNumber());
-            studentQueryWrapper.eq("status",RegisterStatusEnum.RESOLVED.getValue());
+            studentQueryWrapper.eq("status", RegisterStatusEnum.RESOLVED.getValue());
             Student studentByNumber = this.getOne(studentQueryWrapper);
             ThrowUtils.throwIf(studentByNumber != null, ErrorCode.PARAMS_ERROR, "学号已存在");
 
@@ -231,7 +233,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student>
                 if (studentOneStatus == RegisterStatusEnum.PENDING.getValue()) {
                     throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号正在审核中");
                 }
-                if(studentOneStatus == RegisterStatusEnum.RESOLVED.getValue()){
+                if (studentOneStatus == RegisterStatusEnum.RESOLVED.getValue()) {
                     throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号已存在");
                 }
 
@@ -244,11 +246,11 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student>
             // 4.操作数据库
             // 账号已存在则更新数据，否则就插入新数据
             boolean result;
-            if(studentOne != null){
+            if (studentOne != null) {
                 student.setStatus(RegisterStatusEnum.PENDING.getValue());
                 student.setId(studentOne.getId());
                 result = this.updateById(student);
-            }else{
+            } else {
                 result = this.save(student);
             }
             if (!result) {

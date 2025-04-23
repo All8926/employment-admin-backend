@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 简历信息视图
@@ -49,6 +50,11 @@ public class ContractVO implements Serializable {
      * 学生姓名
      */
     private String studentName;
+
+    /**
+     * 学生简历
+     */
+    private List<ResumeVO> resumeList;
 
     /**
      * 教师id(审核人)
